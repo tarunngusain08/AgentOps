@@ -2,7 +2,7 @@
 
 AgentOps is a Production Engineering Copilot with Built-In Agent Reliability.
 
-M01 implements the first demo capability: a user submits a public GitHub repository URL and receives a lightweight architecture report generated from deterministic repository analysis.
+The current product surface is intentionally small and demo-first: a user submits a public GitHub repository URL, then chooses either an architecture report or a new-engineer onboarding guide generated from deterministic repository analysis.
 
 ## M01: Repository Understanding
 
@@ -16,6 +16,23 @@ The current milestone supports:
 - A minimal React UI for Demo #1.
 
 M01 intentionally does not include a database, vector search, RAG, tracing, evaluation, PR review, incident investigation, or multi-agent orchestration.
+
+## M02: Documentation Assistant
+
+M02 adds the second demo capability: a user submits a public GitHub repository URL and receives a source-grounded onboarding guide for new engineers.
+
+The onboarding guide includes:
+
+- Project overview.
+- Technology stack.
+- Evidence-backed how-to-run guidance.
+- Architecture summary.
+- Key components.
+- Common workflows.
+- Useful files.
+- Assumptions.
+
+How-to-run guidance is generated only from inspected evidence such as `package.json`, `pyproject.toml`, `requirements.txt`, `pom.xml`, `build.gradle`, `Dockerfile`, or `docker-compose.yml`. If no inspected file supports a run instruction, AgentOps states that assumption instead of inventing a command.
 
 ## Local Setup
 
@@ -35,6 +52,7 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/v1/repositories/analyze`
+- `POST /api/v1/repositories/guides/onboarding`
 
 Optional environment variable:
 
@@ -52,7 +70,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default.
+The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report and Onboarding Guide.
 
 To point it at a different backend:
 
@@ -79,7 +97,27 @@ Expected report sections:
 - Assumptions.
 - Analysis metadata.
 
-## M01 Limits
+## Demo #2
+
+Start the backend and frontend, choose **Onboarding Guide**, then submit a public repository URL such as:
+
+```text
+https://github.com/fastapi/fastapi
+```
+
+Expected guide sections:
+
+- Project Overview.
+- Technology Stack.
+- How To Run.
+- Architecture Summary.
+- Key Components.
+- Common Workflows.
+- Useful Files.
+- Assumptions.
+- Analysis metadata.
+
+## Current Limits
 
 Repository analysis is intentionally lightweight:
 
@@ -88,3 +126,5 @@ Repository analysis is intentionally lightweight:
 - README is optional and not trusted as the primary signal.
 - Repositories are not cloned locally.
 - Analysis favors file structure, manifests, entry points, and directory hierarchy.
+- Onboarding guides use heuristic generation and do not require a model API key.
+- The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.
