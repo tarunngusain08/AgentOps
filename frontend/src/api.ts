@@ -26,6 +26,33 @@ export interface AnalyzeRepositoryResponse {
   };
 }
 
+export interface OnboardingGuideResponse {
+  repository: {
+    owner: string;
+    name: string;
+    default_branch: string;
+    html_url?: string | null;
+  };
+  analysis_metadata: {
+    files_inspected: number;
+    directories_inspected: number;
+    analysis_mode: string;
+    truncated: boolean;
+  };
+  guide: {
+    title: string;
+    sections: Array<{
+      title: string;
+      items: Array<{
+        text: string;
+        evidence: string[];
+      }>;
+    }>;
+    evidence: string[];
+    assumptions: string[];
+  };
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function analyzeRepository(repositoryUrl: string): Promise<AnalyzeRepositoryResponse> {
@@ -40,6 +67,24 @@ export async function analyzeRepository(repositoryUrl: string): Promise<AnalyzeR
   if (!response.ok) {
     const errorBody = await response.json().catch(() => undefined);
     const message = errorBody?.detail ?? "Repository analysis failed.";
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+export async function generateOnboardingGuide(repositoryUrl: string): Promise<OnboardingGuideResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/repositories/guides/onboarding`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ repository_url: repositoryUrl })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined);
+    const message = errorBody?.detail ?? "Onboarding guide generation failed.";
     throw new Error(message);
   }
 

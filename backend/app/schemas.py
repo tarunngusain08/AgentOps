@@ -39,3 +39,26 @@ class AnalyzeRepositoryResponse(BaseModel):
     repository: RepositoryInfo
     analysis_metadata: AnalysisMetadata
     report: ArchitectureReport
+
+
+class GuideItem(BaseModel):
+    text: str
+    evidence: list[str]
+
+
+class GuideSection(BaseModel):
+    title: str
+    items: list[GuideItem]
+
+
+class Guide(BaseModel):
+    title: str
+    sections: list[GuideSection]
+    evidence: list[str]
+    assumptions: list[str]
+
+
+class OnboardingGuideResponse(BaseModel):
+    repository: RepositoryInfo
+    analysis_metadata: AnalysisMetadata
+    guide: Guide
