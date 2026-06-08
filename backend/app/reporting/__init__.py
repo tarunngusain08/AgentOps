@@ -1,0 +1,1 @@
+"""Architecture report generation."""
