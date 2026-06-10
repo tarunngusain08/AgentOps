@@ -2,7 +2,7 @@
 
 AgentOps is a Production Engineering Copilot with Built-In Agent Reliability.
 
-The current product surface is intentionally small and demo-first: a user submits a public GitHub repository URL, then chooses either an architecture report or a new-engineer onboarding guide generated from deterministic repository analysis.
+The current product surface is intentionally small and demo-first: a user submits a public GitHub repository URL, then chooses an architecture report, a new-engineer onboarding guide, or an evidence-backed pull request review generated from deterministic repository analysis.
 
 ## M01: Repository Understanding
 
@@ -34,6 +34,24 @@ The onboarding guide includes:
 
 How-to-run guidance is generated only from inspected evidence such as `package.json`, `pyproject.toml`, `requirements.txt`, `pom.xml`, `build.gradle`, `Dockerfile`, or `docker-compose.yml`. If no inspected file supports a run instruction, AgentOps states that assumption instead of inventing a command.
 
+## M03: PR Review
+
+M03 adds the third demo capability: a user submits a public GitHub repository URL and pull request number, then receives a deterministic review report focused on repository-structure and architecture-level impact.
+
+The PR review includes:
+
+- Summary.
+- Potential risks.
+- Breaking changes.
+- Files requiring attention.
+- Testing concerns.
+- Architecture impact.
+- Evidence.
+- Assumptions.
+- Confidence.
+
+PR review is heuristic and evidence-backed. It does not perform code correctness verification, security auditing, vulnerability scanning, performance analysis, static analysis, style enforcement, language-specific linting, or GitHub review comments.
+
 ## Local Setup
 
 ### Backend
@@ -53,6 +71,7 @@ Useful endpoints:
 - `GET /health`
 - `POST /api/v1/repositories/analyze`
 - `POST /api/v1/repositories/guides/onboarding`
+- `POST /api/v1/repositories/pull-requests/review`
 
 Optional environment variable:
 
@@ -70,7 +89,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report and Onboarding Guide.
+The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, and PR Review.
 
 To point it at a different backend:
 
@@ -117,6 +136,28 @@ Expected guide sections:
 - Assumptions.
 - Analysis metadata.
 
+## Demo #3
+
+Start the backend and frontend, choose **PR Review**, then submit:
+
+```text
+Repository: https://github.com/tarunngusain08/AgentOps
+PR: 8
+```
+
+Expected review sections:
+
+- Summary.
+- Potential Risks.
+- Breaking Changes.
+- Files Requiring Attention.
+- Testing Concerns.
+- Architecture Impact.
+- Evidence.
+- Assumptions.
+- Confidence.
+- Analysis metadata.
+
 ## Current Limits
 
 Repository analysis is intentionally lightweight:
@@ -127,4 +168,6 @@ Repository analysis is intentionally lightweight:
 - Repositories are not cloned locally.
 - Analysis favors file structure, manifests, entry points, and directory hierarchy.
 - Onboarding guides use heuristic generation and do not require a model API key.
+- PR review is limited to changed-file metadata, available patch snippets, and repository architecture signals.
+- PR review inspects at most 200 changed files and 1 MB of patch content.
 - The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.

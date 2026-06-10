@@ -62,3 +62,49 @@ class OnboardingGuideResponse(BaseModel):
     repository: RepositoryInfo
     analysis_metadata: AnalysisMetadata
     guide: Guide
+
+
+class PullRequestReviewRequest(BaseModel):
+    repository_url: str = Field(..., min_length=1)
+    pull_request_number: int = Field(..., gt=0)
+
+
+class PullRequestInfo(BaseModel):
+    number: int
+    title: str
+    state: str
+    html_url: str | None = None
+    base_branch: str
+    head_branch: str
+    author: str | None = None
+
+
+class PRReviewAnalysisMetadata(BaseModel):
+    changed_files: int
+    files_inspected: int
+    patch_bytes: int
+    high_signal_files: int
+    analysis_mode: str = "heuristic"
+    truncated: bool
+
+
+class ReviewFinding(BaseModel):
+    category: str
+    severity: str
+    description: str
+    evidence: list[str]
+
+
+class PullRequestReview(BaseModel):
+    summary: str
+    findings: list[ReviewFinding]
+    assumptions: list[str]
+    confidence: str
+    metadata: dict[str, int | str | bool]
+
+
+class PullRequestReviewResponse(BaseModel):
+    repository: RepositoryInfo
+    pull_request: PullRequestInfo
+    analysis_metadata: PRReviewAnalysisMetadata
+    review: PullRequestReview

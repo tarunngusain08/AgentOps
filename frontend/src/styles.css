@@ -96,7 +96,7 @@ h3 {
 
 .mode-toggle {
   display: inline-grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   border: 1px solid #c8d3cb;
   border-radius: 8px;
@@ -148,6 +148,22 @@ h3 {
 .input-row button:disabled {
   cursor: not-allowed;
   background: #8fa89a;
+}
+
+.pr-number-row {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  max-width: 280px;
+}
+
+.pr-number-row input {
+  min-width: 0;
+  border: 1px solid #c8d3cb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #1e2528;
+  background: #fbfcfa;
 }
 
 .error-banner {
@@ -229,6 +245,47 @@ li {
 
 .guide-item p {
   color: #37463d;
+}
+
+.finding-list {
+  display: grid;
+  gap: 12px;
+}
+
+.finding-item {
+  border: 1px solid #e0e5df;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfcfa;
+}
+
+.finding-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.severity {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.severity-high {
+  color: #7a231b;
+  background: #ffebe7;
+}
+
+.severity-medium {
+  color: #6c4a00;
+  background: #fff4cf;
+}
+
+.severity-low {
+  color: #24533a;
+  background: #e7f4eb;
 }
 
 .evidence-list {

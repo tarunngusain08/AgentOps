@@ -3,17 +3,28 @@ import {
   analyzeRepository,
   AnalyzeRepositoryResponse,
   generateOnboardingGuide,
-  OnboardingGuideResponse
+  OnboardingGuideResponse,
+  PullRequestReviewResponse,
+  reviewPullRequest
 } from "./api";
 
-const sampleUrl = "https://github.com/fastapi/fastapi";
-type Mode = "architecture" | "onboarding";
+const sampleUrl = "https://github.com/tarunngusain08/AgentOps";
+const samplePrNumber = "8";
+type Mode = "architecture" | "onboarding" | "review";
 type ResultState =
   | { mode: "architecture"; value: AnalyzeRepositoryResponse }
-  | { mode: "onboarding"; value: OnboardingGuideResponse };
+  | { mode: "onboarding"; value: OnboardingGuideResponse }
+  | { mode: "review"; value: PullRequestReviewResponse };
+
+const modeLabels: Record<Mode, string> = {
+  architecture: "Repository Architecture",
+  onboarding: "Onboarding Guide",
+  review: "PR Review"
+};
 
 export default function App() {
   const [repositoryUrl, setRepositoryUrl] = useState(sampleUrl);
+  const [pullRequestNumber, setPullRequestNumber] = useState(samplePrNumber);
   const [mode, setMode] = useState<Mode>("architecture");
   const [result, setResult] = useState<ResultState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +40,15 @@ export default function App() {
       if (mode === "architecture") {
         const response = await analyzeRepository(repositoryUrl);
         setResult({ mode, value: response });
-      } else {
+      } else if (mode === "onboarding") {
         const response = await generateOnboardingGuide(repositoryUrl);
+        setResult({ mode, value: response });
+      } else {
+        const parsedPullRequestNumber = Number.parseInt(pullRequestNumber, 10);
+        if (!Number.isInteger(parsedPullRequestNumber) || parsedPullRequestNumber <= 0) {
+          throw new Error("Pull request number must be a positive integer.");
+        }
+        const response = await reviewPullRequest(repositoryUrl, parsedPullRequestNumber);
         setResult({ mode, value: response });
       }
     } catch (caught) {
@@ -45,8 +63,8 @@ export default function App() {
       <section className="analysis-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AgentOps M02</p>
-            <h1>{mode === "architecture" ? "Repository Architecture" : "Onboarding Guide"}</h1>
+            <p className="eyebrow">AgentOps M03</p>
+            <h1>{modeLabels[mode]}</h1>
           </div>
           <span className="mode-pill">Heuristic</span>
         </div>
@@ -66,6 +84,13 @@ export default function App() {
           >
             Onboarding Guide
           </button>
+          <button
+            className={mode === "review" ? "active" : ""}
+            onClick={() => setMode("review")}
+            type="button"
+          >
+            PR Review
+          </button>
         </div>
 
         <form className="repo-form" onSubmit={handleSubmit}>
@@ -77,10 +102,23 @@ export default function App() {
               onChange={(event) => setRepositoryUrl(event.target.value)}
               placeholder={sampleUrl}
             />
-            <button disabled={loading || repositoryUrl.trim().length === 0} type="submit">
-              {loading ? "Working" : mode === "architecture" ? "Analyze" : "Generate"}
+            <button disabled={loading || repositoryUrl.trim().length === 0 || (mode === "review" && pullRequestNumber.trim().length === 0)} type="submit">
+              {loading ? "Working" : actionLabel(mode)}
             </button>
           </div>
+          {mode === "review" ? (
+            <div className="pr-number-row">
+              <label htmlFor="pull-request-number">Pull request number</label>
+              <input
+                id="pull-request-number"
+                min="1"
+                onChange={(event) => setPullRequestNumber(event.target.value)}
+                placeholder={samplePrNumber}
+                type="number"
+                value={pullRequestNumber}
+              />
+            </div>
+          ) : null}
         </form>
 
         {error ? <div className="error-banner">{error}</div> : null}
@@ -88,8 +126,126 @@ export default function App() {
 
       {result?.mode === "architecture" ? <ReportView result={result.value} /> : null}
       {result?.mode === "onboarding" ? <GuideView result={result.value} /> : null}
+      {result?.mode === "review" ? <PullRequestReviewView result={result.value} /> : null}
       {!result ? <EmptyState mode={mode} /> : null}
     </main>
+  );
+}
+
+function actionLabel(mode: Mode) {
+  if (mode === "architecture") {
+    return "Analyze";
+  }
+  if (mode === "onboarding") {
+    return "Generate";
+  }
+  return "Review";
+}
+
+function PullRequestReviewView({ result }: { result: PullRequestReviewResponse }) {
+  const { repository, pull_request, analysis_metadata, review } = result;
+  const findingsByCategory = groupFindings(review.findings);
+  const evidence = uniqueEvidence(review.findings);
+
+  return (
+    <section className="report-grid">
+      <article className="report-section report-wide">
+        <div className="section-title">
+          <h2>
+            PR #{pull_request.number}: {pull_request.title}
+          </h2>
+          <span>{review.confidence} confidence</span>
+        </div>
+        <p>{review.summary}</p>
+        <div className="evidence-list">
+          <code>
+            {repository.owner}/{repository.name}
+          </code>
+          <code>
+            {pull_request.head_branch || "head"} -&gt; {pull_request.base_branch || repository.default_branch}
+          </code>
+        </div>
+      </article>
+
+      <FindingSection title="Potential Risks" findings={findingsByCategory.potential_risk} />
+      <FindingSection title="Breaking Changes" findings={findingsByCategory.breaking_change} />
+      <FindingSection title="Files Requiring Attention" findings={findingsByCategory.file_attention} />
+      <FindingSection title="Testing Concerns" findings={findingsByCategory.testing_concern} />
+      <FindingSection title="Architecture Impact" findings={findingsByCategory.architecture_impact} />
+      <ListSection title="Evidence" items={evidence} />
+      <ListSection title="Assumptions" items={review.assumptions} />
+
+      <article className="report-section">
+        <h2>Analysis Metadata</h2>
+        <PRMetadataList metadata={analysis_metadata} />
+      </article>
+    </section>
+  );
+}
+
+function FindingSection({
+  findings,
+  title
+}: {
+  findings: PullRequestReviewResponse["review"]["findings"];
+  title: string;
+}) {
+  return (
+    <article className="report-section report-wide">
+      <h2>{title}</h2>
+      {findings.length > 0 ? (
+        <div className="finding-list">
+          {findings.map((finding) => (
+            <div className="finding-item" key={`${finding.category}-${finding.description}`}>
+              <div className="finding-title">
+                <h3>{finding.description}</h3>
+                <span className={`severity severity-${finding.severity.toLowerCase()}`}>
+                  {finding.severity}
+                </span>
+              </div>
+              <div className="evidence-list">
+                {finding.evidence.map((evidence) => (
+                  <code key={evidence}>{evidence}</code>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="muted">None detected.</p>
+      )}
+    </article>
+  );
+}
+
+function PRMetadataList({ metadata }: { metadata: PullRequestReviewResponse["analysis_metadata"] }) {
+  return (
+    <dl className="metadata-list">
+      <div>
+        <dt>Changed files</dt>
+        <dd>{metadata.changed_files}</dd>
+      </div>
+      <div>
+        <dt>Files inspected</dt>
+        <dd>{metadata.files_inspected}</dd>
+      </div>
+      <div>
+        <dt>Patch bytes</dt>
+        <dd>{metadata.patch_bytes}</dd>
+      </div>
+      <div>
+        <dt>High-signal files</dt>
+        <dd>{metadata.high_signal_files}</dd>
+      </div>
+      <div>
+        <dt>Mode</dt>
+        <dd>{metadata.analysis_mode}</dd>
+      </div>
+      <div>
+        <dt>Truncated</dt>
+        <dd>{metadata.truncated ? "Yes" : "No"}</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -213,6 +369,20 @@ function MetadataList({
   );
 }
 
+function groupFindings(findings: PullRequestReviewResponse["review"]["findings"]) {
+  return {
+    potential_risk: findings.filter((finding) => finding.category === "potential_risk"),
+    breaking_change: findings.filter((finding) => finding.category === "breaking_change"),
+    file_attention: findings.filter((finding) => finding.category === "file_attention"),
+    testing_concern: findings.filter((finding) => finding.category === "testing_concern"),
+    architecture_impact: findings.filter((finding) => finding.category === "architecture_impact")
+  };
+}
+
+function uniqueEvidence(findings: PullRequestReviewResponse["review"]["findings"]) {
+  return Array.from(new Set(findings.flatMap((finding) => finding.evidence))).filter(Boolean);
+}
+
 function ListSection({ title, items }: { title: string; items: string[] }) {
   return (
     <article className="report-section">
@@ -236,7 +406,11 @@ function EmptyState({ mode }: { mode: Mode }) {
       <h2>Ready</h2>
       <p>
         Submit a public GitHub repository to generate{" "}
-        {mode === "architecture" ? "the architecture report." : "a new-engineer onboarding guide."}
+        {mode === "architecture"
+          ? "the architecture report."
+          : mode === "onboarding"
+            ? "a new-engineer onboarding guide."
+            : "an evidence-backed pull request review."}
       </p>
     </section>
   );

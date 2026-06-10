@@ -53,6 +53,44 @@ export interface OnboardingGuideResponse {
   };
 }
 
+export interface PullRequestReviewResponse {
+  repository: {
+    owner: string;
+    name: string;
+    default_branch: string;
+    html_url?: string | null;
+  };
+  pull_request: {
+    number: number;
+    title: string;
+    state: string;
+    html_url?: string | null;
+    base_branch: string;
+    head_branch: string;
+    author?: string | null;
+  };
+  analysis_metadata: {
+    changed_files: number;
+    files_inspected: number;
+    patch_bytes: number;
+    high_signal_files: number;
+    analysis_mode: string;
+    truncated: boolean;
+  };
+  review: {
+    summary: string;
+    findings: Array<{
+      category: string;
+      severity: string;
+      description: string;
+      evidence: string[];
+    }>;
+    assumptions: string[];
+    confidence: string;
+    metadata: Record<string, string | number | boolean>;
+  };
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function analyzeRepository(repositoryUrl: string): Promise<AnalyzeRepositoryResponse> {
@@ -85,6 +123,30 @@ export async function generateOnboardingGuide(repositoryUrl: string): Promise<On
   if (!response.ok) {
     const errorBody = await response.json().catch(() => undefined);
     const message = errorBody?.detail ?? "Onboarding guide generation failed.";
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+export async function reviewPullRequest(
+  repositoryUrl: string,
+  pullRequestNumber: number
+): Promise<PullRequestReviewResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/repositories/pull-requests/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      repository_url: repositoryUrl,
+      pull_request_number: pullRequestNumber
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined);
+    const message = errorBody?.detail ?? "Pull request review failed.";
     throw new Error(message);
   }
 
