@@ -173,6 +173,9 @@ class GitHubService:
                 return None
             raise
 
+    def request_json(self, path: str) -> dict | list:
+        return self._get_json(path)
+
     def _get_json(self, path: str) -> dict | list:
         url = f"{GITHUB_API_BASE}{path}"
         headers = {
