@@ -5,6 +5,8 @@ from typing import Any
 
 EVALUATION_RUN_SCHEMA_VERSION = "evaluation-run/v1"
 EVALUATION_SUITE_SCHEMA_VERSION = "evaluation-suite/v1"
+EXECUTION_TRACE_SCHEMA_VERSION = "execution-trace/v1"
+REGRESSION_REPORT_SCHEMA_VERSION = "regression-report/v1"
 STATE_SCHEMA_VERSION = "agentops-state/v1"
 
 
@@ -91,3 +93,69 @@ class EvaluationRun:
     summary: EvaluationSummary
     metadata: dict[str, int | str]
 
+
+@dataclass(frozen=True)
+class TraceSpan:
+    id: str
+    name: str
+    start_ms: int
+    duration_ms: int
+    status: str
+    metadata: dict[str, str | int | float | bool | None]
+
+
+@dataclass(frozen=True)
+class ExecutionTrace:
+    schema_version: str
+    trace_id: str
+    run_id: str
+    task_id: str
+    started_at: str
+    duration_ms: int
+    spans: list[TraceSpan]
+
+
+@dataclass(frozen=True)
+class CheckComparison:
+    id: str
+    required: bool
+    baseline_passed: bool
+    candidate_passed: bool
+    status: str
+
+
+@dataclass(frozen=True)
+class TaskComparison:
+    id: str
+    priority: str
+    baseline_score: int
+    candidate_score: int
+    score_delta: int
+    baseline_passed: bool
+    candidate_passed: bool
+    status: str
+    regression_reasons: list[str]
+    check_comparisons: list[CheckComparison]
+
+
+@dataclass(frozen=True)
+class RegressionSummary:
+    total_tasks: int
+    regressed_tasks: int
+    improved_tasks: int
+    unchanged_tasks: int
+    p0_regressions: int
+
+
+@dataclass(frozen=True)
+class RegressionReport:
+    schema_version: str
+    report_id: str
+    baseline_run_id: str
+    candidate_run_id: str
+    suite_id: str
+    suite_version: str
+    status: str
+    comparison_passed: bool
+    task_comparisons: list[TaskComparison]
+    summary: RegressionSummary
