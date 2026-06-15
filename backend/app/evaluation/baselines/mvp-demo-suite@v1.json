@@ -1,0 +1,339 @@
+{
+  "fixture_versions": {
+    "incident-rca": "checkout-latency@v1",
+    "onboarding-guide": "repository-basic@v1",
+    "pr-review": "pull-request-basic@v1",
+    "repository-architecture": "repository-basic@v1"
+  },
+  "implementation_version": "c6140f1e95673286b6e22f14ac28f03f23cb2487",
+  "metadata": {
+    "analysis_mode": "heuristic",
+    "duration_ms": 1
+  },
+  "result_hash": "e10c3ce4834cfbbd53404d86fdf34051544120e7b657cdf690c9d496c25a25a1",
+  "run_id": "run-000001",
+  "schema_version": "evaluation-run/v1",
+  "suite_id": "mvp-demo-suite",
+  "suite_version": "v1",
+  "summary": {
+    "failed_tasks": 0,
+    "pass_rate": 1.0,
+    "passed_tasks": 4,
+    "total_tasks": 4
+  },
+  "tasks": [
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Architecture workflow completes.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "workflow_status=success",
+          "id": "arch-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "API/Application Layer",
+          "description": "Architecture report identifies API layer.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "API/Application Layer",
+          "id": "arch-api-layer",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "FastAPI",
+          "description": "Architecture report detects FastAPI.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "FastAPI",
+          "id": "arch-fastapi",
+          "passed": true,
+          "required": false,
+          "weight": 25
+        },
+        {
+          "actual": "app/main.py",
+          "description": "Architecture report cites app entry point.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "app/main.py",
+          "id": "arch-entrypoint",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "repository-basic@v1",
+      "id": "repository-architecture",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "architecture_report"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Onboarding workflow completes.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "workflow_status=success",
+          "id": "guide-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "How To Run",
+          "description": "Guide contains How To Run section.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "How To Run",
+          "id": "guide-how-to-run",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "pyproject.toml",
+          "description": "Guide cites pyproject evidence.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "pyproject.toml",
+          "id": "guide-evidence",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "Useful Files",
+          "description": "Guide contains useful files.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/"
+          ],
+          "expected": "Useful Files",
+          "id": "guide-useful-files",
+          "passed": true,
+          "required": false,
+          "weight": 30
+        }
+      ],
+      "fixture_id": "repository-basic@v1",
+      "id": "onboarding-guide",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "onboarding_guide"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "PR review workflow completes.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "app/main.py",
+            "app/main.py"
+          ],
+          "expected": "workflow_status=success",
+          "id": "review-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "potential_risk",
+          "description": "PR review identifies potential risk.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "app/main.py",
+            "app/main.py"
+          ],
+          "expected": "potential_risk",
+          "id": "review-risk",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "testing_concern",
+          "description": "PR review identifies testing concern.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "app/main.py",
+            "app/main.py"
+          ],
+          "expected": "testing_concern",
+          "id": "review-testing",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "pyproject.toml",
+          "description": "PR review includes file evidence.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "pyproject.toml",
+            "app/main.py",
+            "app/main.py",
+            "app/main.py"
+          ],
+          "expected": "pyproject.toml",
+          "id": "review-evidence",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "pull-request-basic@v1",
+      "id": "pr-review",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "pr_review"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Incident workflow completes.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "workflow_status=success",
+          "id": "incident-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "CONNECTION_POOL_REGRESSION",
+          "description": "RCA identifies connection pool regression.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "CONNECTION_POOL_REGRESSION",
+          "id": "incident-root-cause",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "metric-1",
+          "description": "RCA includes evidence ids.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "metric-1",
+          "id": "incident-evidence",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "High",
+          "description": "RCA reports high confidence.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "High",
+          "id": "incident-confidence",
+          "passed": true,
+          "required": false,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "checkout-latency@v1",
+      "id": "incident-rca",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "incident_rca"
+    }
+  ],
+  "version_label": "baseline-v0.6.0"
+}

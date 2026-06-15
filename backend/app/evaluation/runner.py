@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from time import perf_counter
 
-from app.evaluation.json_utils import sha256_hex
+from app.evaluation.hashing import evaluation_result_hash
 from app.evaluation.matcher import FactMatcher
 from app.evaluation.models import (
     EVALUATION_RUN_SCHEMA_VERSION,
@@ -105,7 +105,7 @@ class EvaluationRunner:
         tasks: list[TaskResult],
         summary: EvaluationSummary,
     ) -> str:
-        return sha256_hex(
+        return evaluation_result_hash(
             {
                 "suite_id": suite.id,
                 "suite_version": suite.version,
@@ -114,4 +114,3 @@ class EvaluationRunner:
                 "summary": asdict(summary),
             }
         )
-
