@@ -331,6 +331,22 @@ Expected trace sections under the Evaluation Suite result:
 - Flat ordered spans.
 - Primitive diagnostic metadata.
 
+## Runtime Demo Screenshots
+
+Screenshots captured from the local runtime are stored under `testing/screenshots/runtime/demo/`.
+
+The GitHub-backed screenshots use the public `https://github.com/fastapi/fastapi` repository so the demo can run without private repository credentials. The PR review screenshot uses public PR `fastapi/fastapi#15761`.
+
+| Demo | Screenshot |
+| ---- | ---------- |
+| Home / ready state | ![Home ready state](testing/screenshots/runtime/demo/00-home-architecture-ready.png) |
+| Architecture report | ![Architecture report](testing/screenshots/runtime/demo/01-architecture-report.png) |
+| Onboarding guide | ![Onboarding guide](testing/screenshots/runtime/demo/02-onboarding-guide.png) |
+| PR review | ![PR review](testing/screenshots/runtime/demo/03-pr-review.png) |
+| Incident RCA | ![Incident RCA](testing/screenshots/runtime/demo/04-incident-rca.png) |
+| Evaluation suite traces | ![Evaluation suite traces](testing/screenshots/runtime/demo/05-evaluation-suite-traces.png) |
+| Regression report | ![Regression report](testing/screenshots/runtime/demo/06-regression-report.png) |
+
 ## Current Limits
 
 Repository analysis is intentionally lightweight:
