@@ -179,3 +179,12 @@ class IncidentInvestigationResponse(BaseModel):
     scenario_id: str
     analysis_metadata: IncidentAnalysisMetadata
     rca: IncidentRCA
+
+
+class EvaluationRunRequest(BaseModel):
+    suite_id: str = Field(default="mvp-demo-suite@v1", min_length=1)
+    version_label: str = Field(default="local-dev", min_length=1)
+
+
+class EvaluationSuitesResponse(BaseModel):
+    suites: list[dict[str, str | int | list[str]]]

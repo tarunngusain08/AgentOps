@@ -134,6 +134,42 @@ export interface IncidentInvestigationResponse {
   };
 }
 
+export interface EvaluationRunResponse {
+  schema_version: string;
+  run_id: string;
+  result_hash: string;
+  suite_id: string;
+  suite_version: string;
+  implementation_version: string;
+  version_label: string;
+  fixture_versions: Record<string, string>;
+  tasks: Array<{
+    id: string;
+    priority: string;
+    workflow: string;
+    fixture_id: string;
+    score: number;
+    passed: boolean;
+    checks: Array<{
+      id: string;
+      description: string;
+      weight: number;
+      required: boolean;
+      passed: boolean;
+      expected: string;
+      actual: string | null;
+      evidence: string[];
+    }>;
+  }>;
+  summary: {
+    total_tasks: number;
+    passed_tasks: number;
+    failed_tasks: number;
+    pass_rate: number;
+  };
+  metadata: Record<string, string | number>;
+}
+
 interface TraceableText {
   text: string;
   evidence_ids: string[];
@@ -233,6 +269,31 @@ export async function investigateIncident(
     const detail = errorBody?.detail;
     const message = typeof detail === "object" ? detail.message : detail;
     throw new Error(message ?? "Incident investigation failed.");
+  }
+
+  return response.json();
+}
+
+export async function runEvaluationSuite(
+  suiteId = "mvp-demo-suite@v1",
+  versionLabel = "local-dev"
+): Promise<EvaluationRunResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/evaluations/run`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      suite_id: suiteId,
+      version_label: versionLabel
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined);
+    const detail = errorBody?.detail;
+    const message = typeof detail === "object" ? detail.message : detail;
+    throw new Error(message ?? "Evaluation suite failed.");
   }
 
   return response.json();

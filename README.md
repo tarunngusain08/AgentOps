@@ -70,6 +70,19 @@ The incident RCA includes:
 
 M04 is intentionally fixture-driven. It uses the synthetic `checkout-latency@v1` scenario, deterministic correlation rules, and heuristic classification. It does not use real observability integrations, LLM reasoning, tracing, RAG, embeddings, or incident-provider plugins.
 
+## M05: Evaluation Framework
+
+M05 adds deterministic golden-task evaluation for the four demo workflows already in the product:
+
+- Repository architecture report.
+- Onboarding guide.
+- Pull request review.
+- Incident RCA.
+
+The built-in suite is `mvp-demo-suite@v1`. It runs pinned fixtures through the existing workflow code, scores weighted checks, records required-check failures, and persists a local evaluation run under `.agentops/eval-runs/`.
+
+Evaluation is intentionally fixture-backed and explainable. It does not use LLM judgment, external services, a database, RAG, embeddings, tracing, or CI gates yet.
+
 ## Local Setup
 
 ### Backend
@@ -91,6 +104,9 @@ Useful endpoints:
 - `POST /api/v1/repositories/guides/onboarding`
 - `POST /api/v1/repositories/pull-requests/review`
 - `POST /api/v1/incidents/investigate`
+- `GET /api/v1/evaluations/suites`
+- `POST /api/v1/evaluations/run`
+- `GET /api/v1/evaluations/runs/{run_id}`
 
 Optional environment variable:
 
@@ -108,7 +124,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, PR Review, and Incident RCA.
+The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, PR Review, Incident RCA, and Evaluation Suite.
 
 To point it at a different backend:
 
@@ -200,6 +216,30 @@ Expected RCA sections:
 - Assumptions.
 - Analysis metadata.
 
+## Demo #5
+
+Start the backend and frontend, choose **Evaluation Suite**, then submit:
+
+```text
+Suite: mvp-demo-suite@v1
+```
+
+Expected evaluation sections:
+
+- Suite summary.
+- Run ID.
+- Result hash.
+- Per-task pass/fail status.
+- Weighted check results.
+- Fixture versions.
+- Analysis metadata.
+
+The run is persisted locally under:
+
+```text
+.agentops/eval-runs/mvp-demo-suite@v1/
+```
+
 ## Current Limits
 
 Repository analysis is intentionally lightweight:
@@ -214,4 +254,7 @@ Repository analysis is intentionally lightweight:
 - PR review inspects at most 200 changed files and 1 MB of patch content.
 - Incident investigation currently supports only the synthetic `checkout-latency@v1` fixture.
 - Incident investigation is deterministic and evidence-backed, not a real production telemetry integration.
+- Evaluation currently supports only `mvp-demo-suite@v1`.
+- Evaluation run IDs are local to `.agentops/`; deleting that directory may reset counters.
+- Evaluation assumes single-process local execution and does not support concurrent run generation.
 - The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.
