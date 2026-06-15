@@ -96,7 +96,8 @@ h3 {
 
 .mode-toggle {
   display: inline-grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  width: 100%;
   gap: 4px;
   border: 1px solid #c8d3cb;
   border-radius: 8px;
@@ -164,6 +165,12 @@ h3 {
   padding: 12px 14px;
   color: #1e2528;
   background: #fbfcfa;
+}
+
+.comparison-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .error-banner {
@@ -260,14 +267,16 @@ li {
 }
 
 .timeline-list,
-.evidence-card-list {
+.evidence-card-list,
+.trace-grid {
   display: grid;
   gap: 12px;
 }
 
 .timeline-item,
 .evidence-card,
-.traceable-text {
+.traceable-text,
+.trace-card {
   border: 1px solid #e0e5df;
   border-radius: 8px;
   padding: 14px;
