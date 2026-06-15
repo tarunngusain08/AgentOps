@@ -17,3 +17,6 @@ frontend/dist/
 # Environment
 .env
 .env.*
+
+# Local workflow helpers
+commit_changes.sh
