@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from app.analyzer.repository_analyzer import RepositoryAnalyzer
 from app.documentation.documentation_generator import DocumentationGenerator
+from app.evaluation.errors import EvaluationError
+from app.evaluation.service import EvaluationService
 from app.github.pull_request_loader import PullRequestLoader
 from app.github.service import GitHubError, GitHubService
 from app.incident.fixtures import FixtureValidationError, ScenarioNotFoundError
@@ -14,6 +16,8 @@ from app.review.pr_review_generator import PRReviewGenerator
 from app.schemas import (
     AnalyzeRepositoryRequest,
     AnalyzeRepositoryResponse,
+    EvaluationRunRequest,
+    EvaluationSuitesResponse,
     IncidentInvestigationRequest,
     IncidentInvestigationResponse,
     OnboardingGuideResponse,
@@ -24,6 +28,16 @@ from app.schemas import (
 )
 
 router = APIRouter()
+
+
+def _evaluation_http_error(exc: EvaluationError) -> HTTPException:
+    return HTTPException(
+        status_code=exc.status_code,
+        detail={
+            "code": exc.code,
+            "message": exc.message,
+        },
+    )
 
 
 @router.post("/repositories/analyze", response_model=AnalyzeRepositoryResponse)
@@ -160,3 +174,34 @@ def investigate_incident(request: IncidentInvestigationRequest) -> IncidentInves
         analysis_metadata=rca_dict["metadata"],
         rca=rca_dict,
     )
+
+
+@router.get("/evaluations/suites", response_model=EvaluationSuitesResponse)
+def list_evaluation_suites() -> dict:
+    try:
+        return EvaluationService().list_suites()
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
+
+
+@router.post("/evaluations/run")
+def run_evaluation_suite(request: EvaluationRunRequest) -> dict:
+    try:
+        return EvaluationService().run_suite(
+            suite_id=request.suite_id,
+            version_label=request.version_label,
+        )
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
+
+
+@router.get("/evaluations/runs/{run_id}")
+def get_evaluation_run(run_id: str, suite_id: str = "mvp-demo-suite", suite_version: str = "v1") -> dict:
+    try:
+        return EvaluationService().load_run(
+            suite_id=suite_id,
+            suite_version=suite_version,
+            run_id=run_id,
+        )
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
