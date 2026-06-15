@@ -99,6 +99,47 @@ Execution traces are separate local artifacts written under `.agentops/traces/`.
 
 Regression comparison does not require trace files. If traces are missing, comparison still works from evaluation run JSON alone.
 
+## M07: GitHub Quality Gates
+
+M07 adds CI quality gates around the deterministic evaluation framework.
+
+The tracked baseline lives at:
+
+```text
+backend/app/evaluation/baselines/mvp-demo-suite@v1.json
+```
+
+The baseline is validated before comparison:
+
+- `result_hash` must match the canonical evaluation result content.
+- Suite id/version must match `mvp-demo-suite@v1`.
+- The P0 task list must match the suite definition.
+
+Local CLI commands:
+
+```bash
+PYTHONPATH=backend python -m app.evaluation.cli run \
+  --suite mvp-demo-suite@v1 \
+  --version local \
+  --output .agentops/eval-runs/local.json
+
+PYTHONPATH=backend python -m app.evaluation.cli compare \
+  --baseline backend/app/evaluation/baselines/mvp-demo-suite@v1.json \
+  --candidate .agentops/eval-runs/local.json \
+  --fail-on-p0-regression
+```
+
+Baseline refreshes should be isolated:
+
+1. Run the suite locally.
+2. Review changed task/check output.
+3. Replace the baseline file.
+4. Open a dedicated baseline-refresh PR.
+5. Do not include implementation changes in the same PR.
+6. Explain why the baseline changed in the PR description.
+
+CI fails when backend tests fail, the frontend build fails, baseline integrity is invalid, a candidate P0 task fails, or a P0 regression is detected. CI uploads evaluation and regression JSON artifacts with 30-day retention.
+
 ## Local Setup
 
 ### Backend
@@ -310,4 +351,6 @@ Repository analysis is intentionally lightweight:
 - Regression comparison currently supports same-suite, same-version evaluation runs only.
 - Execution traces are local JSON timelines, not real OpenTelemetry provider integrations.
 - Trace span metadata is intentionally small and must not contain large workflow outputs.
+- GitHub quality gates do not post PR comments yet.
+- Baseline refresh PRs must be separate from implementation PRs.
 - The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.
