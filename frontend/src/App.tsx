@@ -2,35 +2,41 @@ import { FormEvent, useState } from "react";
 import {
   analyzeRepository,
   AnalyzeRepositoryResponse,
+  EvaluationRunResponse,
   generateOnboardingGuide,
   IncidentInvestigationResponse,
   investigateIncident,
   OnboardingGuideResponse,
   PullRequestReviewResponse,
-  reviewPullRequest
+  reviewPullRequest,
+  runEvaluationSuite
 } from "./api";
 
 const sampleUrl = "https://github.com/tarunngusain08/AgentOps";
 const samplePrNumber = "8";
 const sampleScenarioId = "checkout-latency";
-type Mode = "architecture" | "onboarding" | "review" | "incident";
+const sampleSuiteId = "mvp-demo-suite@v1";
+type Mode = "architecture" | "onboarding" | "review" | "incident" | "evaluation";
 type ResultState =
   | { mode: "architecture"; value: AnalyzeRepositoryResponse }
   | { mode: "onboarding"; value: OnboardingGuideResponse }
   | { mode: "review"; value: PullRequestReviewResponse }
-  | { mode: "incident"; value: IncidentInvestigationResponse };
+  | { mode: "incident"; value: IncidentInvestigationResponse }
+  | { mode: "evaluation"; value: EvaluationRunResponse };
 
 const modeLabels: Record<Mode, string> = {
   architecture: "Repository Architecture",
   onboarding: "Onboarding Guide",
   review: "PR Review",
-  incident: "Incident RCA"
+  incident: "Incident RCA",
+  evaluation: "Evaluation Suite"
 };
 
 export default function App() {
   const [repositoryUrl, setRepositoryUrl] = useState(sampleUrl);
   const [pullRequestNumber, setPullRequestNumber] = useState(samplePrNumber);
   const [scenarioId, setScenarioId] = useState(sampleScenarioId);
+  const [suiteId, setSuiteId] = useState(sampleSuiteId);
   const [mode, setMode] = useState<Mode>("architecture");
   const [result, setResult] = useState<ResultState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,11 +62,17 @@ export default function App() {
         }
         const response = await reviewPullRequest(repositoryUrl, parsedPullRequestNumber);
         setResult({ mode, value: response });
-      } else {
+      } else if (mode === "incident") {
         if (scenarioId.trim().length === 0) {
           throw new Error("Scenario ID is required.");
         }
         const response = await investigateIncident(scenarioId.trim(), repositoryUrl.trim() || undefined);
+        setResult({ mode, value: response });
+      } else {
+        if (suiteId.trim().length === 0) {
+          throw new Error("Evaluation suite is required.");
+        }
+        const response = await runEvaluationSuite(suiteId.trim(), "local-dev");
         setResult({ mode, value: response });
       }
     } catch (caught) {
@@ -75,7 +87,7 @@ export default function App() {
       <section className="analysis-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AgentOps M04</p>
+            <p className="eyebrow">AgentOps M05</p>
             <h1>{modeLabels[mode]}</h1>
           </div>
           <span className="mode-pill">Heuristic</span>
@@ -110,6 +122,13 @@ export default function App() {
           >
             Incident RCA
           </button>
+          <button
+            className={mode === "evaluation" ? "active" : ""}
+            onClick={() => setMode("evaluation")}
+            type="button"
+          >
+            Evaluation Suite
+          </button>
         </div>
 
         <form className="repo-form" onSubmit={handleSubmit}>
@@ -124,9 +143,10 @@ export default function App() {
             <button
               disabled={
                 loading ||
-                (mode !== "incident" && repositoryUrl.trim().length === 0) ||
+                (mode !== "incident" && mode !== "evaluation" && repositoryUrl.trim().length === 0) ||
                 (mode === "review" && pullRequestNumber.trim().length === 0) ||
-                (mode === "incident" && scenarioId.trim().length === 0)
+                (mode === "incident" && scenarioId.trim().length === 0) ||
+                (mode === "evaluation" && suiteId.trim().length === 0)
               }
               type="submit"
             >
@@ -157,6 +177,17 @@ export default function App() {
               />
             </div>
           ) : null}
+          {mode === "evaluation" ? (
+            <div className="pr-number-row">
+              <label htmlFor="suite-id">Evaluation suite</label>
+              <input
+                id="suite-id"
+                onChange={(event) => setSuiteId(event.target.value)}
+                placeholder={sampleSuiteId}
+                value={suiteId}
+              />
+            </div>
+          ) : null}
         </form>
 
         {error ? <div className="error-banner">{error}</div> : null}
@@ -166,6 +197,7 @@ export default function App() {
       {result?.mode === "onboarding" ? <GuideView result={result.value} /> : null}
       {result?.mode === "review" ? <PullRequestReviewView result={result.value} /> : null}
       {result?.mode === "incident" ? <IncidentRCAView result={result.value} /> : null}
+      {result?.mode === "evaluation" ? <EvaluationRunView result={result.value} /> : null}
       {!result ? <EmptyState mode={mode} /> : null}
     </main>
   );
@@ -181,7 +213,75 @@ function actionLabel(mode: Mode) {
   if (mode === "review") {
     return "Review";
   }
-  return "Investigate";
+  if (mode === "incident") {
+    return "Investigate";
+  }
+  return "Run Suite";
+}
+
+function EvaluationRunView({ result }: { result: EvaluationRunResponse }) {
+  return (
+    <section className="report-grid">
+      <article className="report-section report-wide">
+        <div className="section-title">
+          <h2>{result.suite_id}@{result.suite_version}</h2>
+          <span>{Math.round(result.summary.pass_rate * 100)}% pass rate</span>
+        </div>
+        <p>
+          Run {result.run_id} produced result hash {result.result_hash.slice(0, 12)} for {result.version_label}.
+        </p>
+        <div className="evidence-list">
+          <code>{result.summary.passed_tasks}/{result.summary.total_tasks} passed</code>
+          <code>{result.schema_version}</code>
+        </div>
+      </article>
+
+      {result.tasks.map((task) => (
+        <article className="report-section report-wide" key={task.id}>
+          <div className="section-title">
+            <h2>{task.id}</h2>
+            <span>{task.passed ? "Passed" : "Failed"} · {task.score}</span>
+          </div>
+          <div className="finding-list">
+            {task.checks.map((check) => (
+              <div className="finding-item" key={check.id}>
+                <div className="finding-title">
+                  <h3>{check.description}</h3>
+                  <span className={`severity severity-${check.passed ? "low" : "high"}`}>
+                    {check.passed ? "Pass" : "Fail"}
+                  </span>
+                </div>
+                <p>Expected: {check.expected}</p>
+                {!check.passed ? <p>Actual: {check.actual ?? "Not found"}</p> : null}
+                <div className="evidence-list">
+                  <code>{check.id}</code>
+                  <code>{check.weight} weight</code>
+                  {check.required ? <code>required</code> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      ))}
+
+      <article className="report-section">
+        <h2>Fixtures</h2>
+        <div className="evidence-list">
+          {Object.entries(result.fixture_versions).map(([task, fixture]) => (
+            <code key={task}>{task}: {fixture}</code>
+          ))}
+        </div>
+      </article>
+
+      <article className="report-section">
+        <h2>Metadata</h2>
+        <div className="evidence-list">
+          <code>{result.implementation_version.slice(0, 12)}</code>
+          <code>{String(result.metadata.duration_ms)}ms</code>
+        </div>
+      </article>
+    </section>
+  );
 }
 
 function IncidentRCAView({ result }: { result: IncidentInvestigationResponse }) {
@@ -628,7 +728,9 @@ function EmptyState({ mode }: { mode: Mode }) {
             ? "a new-engineer onboarding guide."
             : mode === "review"
               ? "an evidence-backed pull request review."
-              : "a deterministic incident RCA."}
+              : mode === "incident"
+                ? "a deterministic incident RCA."
+                : "the deterministic MVP evaluation suite."}
       </p>
     </section>
   );
