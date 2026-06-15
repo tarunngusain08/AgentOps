@@ -120,8 +120,16 @@ else
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     -d "$PR_CREATE_PAYLOAD")"
-  PR_NUMBER="$(echo "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("number", ""))')"
-  PR_URL="$(echo "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("html_url", ""))')"
+  PR_NUMBER="$(printf '%s' "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("number", ""))')"
+  PR_URL="$(printf '%s' "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("html_url", ""))')"
+  if [[ -z "$PR_NUMBER" || -z "$PR_URL" ]]; then
+    EXISTING_RESPONSE="$(curl -sS "https://api.github.com/repos/$OWNER_REPO/pulls?head=${OWNER_REPO%%/*}:$FEATURE_BRANCH&state=open" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Accept: application/vnd.github+json" \
+      -H "X-GitHub-Api-Version: 2022-11-28")"
+    PR_NUMBER="$(printf '%s' "$EXISTING_RESPONSE" | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data[0].get("number", "") if data else "")')"
+    PR_URL="$(printf '%s' "$EXISTING_RESPONSE" | python3 -c 'import json,sys; data=json.load(sys.stdin); print(data[0].get("html_url", "") if data else "")')"
+  fi
   [[ -n "$PR_NUMBER" && -n "$PR_URL" ]] || die "Unable to create PR: $PR_RESPONSE"
   echo "Created PR: $PR_URL"
 
@@ -131,7 +139,7 @@ else
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     -d "$PR_MERGE_PAYLOAD")"
-  MERGED="$(echo "$MERGE_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("merged", False))')"
+  MERGED="$(printf '%s' "$MERGE_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("merged", False))')"
   [[ "$MERGED" == "True" ]] || die "Unable to merge PR: $MERGE_RESPONSE"
 fi
 
