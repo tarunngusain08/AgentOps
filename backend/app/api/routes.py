@@ -16,6 +16,7 @@ from app.review.pr_review_generator import PRReviewGenerator
 from app.schemas import (
     AnalyzeRepositoryRequest,
     AnalyzeRepositoryResponse,
+    EvaluationCompareRequest,
     EvaluationRunRequest,
     EvaluationSuitesResponse,
     IncidentInvestigationRequest,
@@ -203,5 +204,34 @@ def get_evaluation_run(run_id: str, suite_id: str = "mvp-demo-suite", suite_vers
             suite_version=suite_version,
             run_id=run_id,
         )
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
+
+
+@router.post("/evaluations/compare")
+def compare_evaluation_runs(request: EvaluationCompareRequest) -> dict:
+    try:
+        return EvaluationService().compare_runs(
+            suite_id=request.suite_id,
+            suite_version=request.suite_version,
+            baseline_run_id=request.baseline_run_id,
+            candidate_run_id=request.candidate_run_id,
+        )
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
+
+
+@router.get("/evaluations/runs/{run_id}/traces")
+def list_evaluation_run_traces(run_id: str) -> dict:
+    try:
+        return {"traces": EvaluationService().list_traces(run_id)}
+    except EvaluationError as exc:
+        raise _evaluation_http_error(exc) from exc
+
+
+@router.get("/evaluations/traces/{trace_id}")
+def get_evaluation_trace(trace_id: str) -> dict:
+    try:
+        return EvaluationService().load_trace(trace_id)
     except EvaluationError as exc:
         raise _evaluation_http_error(exc) from exc

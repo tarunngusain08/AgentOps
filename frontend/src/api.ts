@@ -170,6 +170,59 @@ export interface EvaluationRunResponse {
   metadata: Record<string, string | number>;
 }
 
+export interface ExecutionTraceResponse {
+  schema_version: string;
+  trace_id: string;
+  run_id: string;
+  task_id: string;
+  started_at: string;
+  duration_ms: number;
+  spans: Array<{
+    id: string;
+    name: string;
+    start_ms: number;
+    duration_ms: number;
+    status: string;
+    metadata: Record<string, string | number | boolean | null>;
+  }>;
+}
+
+export interface RegressionReportResponse {
+  schema_version: string;
+  report_id: string;
+  baseline_run_id: string;
+  candidate_run_id: string;
+  suite_id: string;
+  suite_version: string;
+  status: string;
+  comparison_passed: boolean;
+  task_comparisons: Array<{
+    id: string;
+    priority: string;
+    baseline_score: number;
+    candidate_score: number;
+    score_delta: number;
+    baseline_passed: boolean;
+    candidate_passed: boolean;
+    status: string;
+    regression_reasons: string[];
+    check_comparisons: Array<{
+      id: string;
+      required: boolean;
+      baseline_passed: boolean;
+      candidate_passed: boolean;
+      status: string;
+    }>;
+  }>;
+  summary: {
+    total_tasks: number;
+    regressed_tasks: number;
+    improved_tasks: number;
+    unchanged_tasks: number;
+    p0_regressions: number;
+  };
+}
+
 interface TraceableText {
   text: string;
   evidence_ids: string[];
@@ -294,6 +347,49 @@ export async function runEvaluationSuite(
     const detail = errorBody?.detail;
     const message = typeof detail === "object" ? detail.message : detail;
     throw new Error(message ?? "Evaluation suite failed.");
+  }
+
+  return response.json();
+}
+
+export async function listRunTraces(runId: string): Promise<ExecutionTraceResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/evaluations/runs/${runId}/traces`);
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined);
+    const detail = errorBody?.detail;
+    const message = typeof detail === "object" ? detail.message : detail;
+    throw new Error(message ?? "Execution traces could not be loaded.");
+  }
+
+  const body = await response.json();
+  return body.traces;
+}
+
+export async function compareEvaluationRuns(
+  baselineRunId: string,
+  candidateRunId: string,
+  suiteId = "mvp-demo-suite",
+  suiteVersion = "v1"
+): Promise<RegressionReportResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/evaluations/compare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      suite_id: suiteId,
+      suite_version: suiteVersion,
+      baseline_run_id: baselineRunId,
+      candidate_run_id: candidateRunId
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined);
+    const detail = errorBody?.detail;
+    const message = typeof detail === "object" ? detail.message : detail;
+    throw new Error(message ?? "Regression comparison failed.");
   }
 
   return response.json();
