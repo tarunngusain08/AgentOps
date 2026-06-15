@@ -186,5 +186,12 @@ class EvaluationRunRequest(BaseModel):
     version_label: str = Field(default="local-dev", min_length=1)
 
 
+class EvaluationCompareRequest(BaseModel):
+    suite_id: str = Field(default="mvp-demo-suite", min_length=1)
+    suite_version: str = Field(default="v1", min_length=1)
+    baseline_run_id: str = Field(..., min_length=1)
+    candidate_run_id: str = Field(..., min_length=1)
+
+
 class EvaluationSuitesResponse(BaseModel):
     suites: list[dict[str, str | int | list[str]]]
