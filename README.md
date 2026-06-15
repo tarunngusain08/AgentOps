@@ -83,6 +83,22 @@ The built-in suite is `mvp-demo-suite@v1`. It runs pinned fixtures through the e
 
 Evaluation is intentionally fixture-backed and explainable. It does not use LLM judgment, external services, a database, RAG, embeddings, tracing, or CI gates yet.
 
+## M06: Regression Reports And Execution Traces
+
+M06 adds local regression comparison and execution trace inspection.
+
+Regression comparison reads two persisted evaluation runs from `.agentops/eval-runs/`, verifies that their suite id, suite version, task ids, and check ids match, then writes a regression report under `.agentops/regression-reports/`.
+
+Execution traces are separate local artifacts written under `.agentops/traces/`. They provide a flat timeline for each evaluated task:
+
+- `task_start`
+- `fixture_load`
+- `workflow_execute`
+- `scoring`
+- `result_persist`
+
+Regression comparison does not require trace files. If traces are missing, comparison still works from evaluation run JSON alone.
+
 ## Local Setup
 
 ### Backend
@@ -107,6 +123,9 @@ Useful endpoints:
 - `GET /api/v1/evaluations/suites`
 - `POST /api/v1/evaluations/run`
 - `GET /api/v1/evaluations/runs/{run_id}`
+- `POST /api/v1/evaluations/compare`
+- `GET /api/v1/evaluations/runs/{run_id}/traces`
+- `GET /api/v1/evaluations/traces/{trace_id}`
 
 Optional environment variable:
 
@@ -124,7 +143,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, PR Review, Incident RCA, and Evaluation Suite.
+The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, PR Review, Incident RCA, Evaluation Suite, and Regression Report.
 
 To point it at a different backend:
 
@@ -240,6 +259,37 @@ The run is persisted locally under:
 .agentops/eval-runs/mvp-demo-suite@v1/
 ```
 
+## Demo #6
+
+Start the backend and frontend, choose **Evaluation Suite**, and run `mvp-demo-suite@v1` twice. This creates two local run IDs such as:
+
+```text
+run-000001
+run-000002
+```
+
+Then choose **Regression Report** and submit:
+
+```text
+Baseline: run-000001
+Candidate: run-000002
+```
+
+Expected regression sections:
+
+- Overall status.
+- Comparison pass/fail.
+- Per-task score deltas.
+- Required-check changes.
+- Regression reasons.
+- P0 regression count.
+
+Expected trace sections under the Evaluation Suite result:
+
+- One trace per evaluated task.
+- Flat ordered spans.
+- Primitive diagnostic metadata.
+
 ## Current Limits
 
 Repository analysis is intentionally lightweight:
@@ -257,4 +307,7 @@ Repository analysis is intentionally lightweight:
 - Evaluation currently supports only `mvp-demo-suite@v1`.
 - Evaluation run IDs are local to `.agentops/`; deleting that directory may reset counters.
 - Evaluation assumes single-process local execution and does not support concurrent run generation.
+- Regression comparison currently supports same-suite, same-version evaluation runs only.
+- Execution traces are local JSON timelines, not real OpenTelemetry provider integrations.
+- Trace span metadata is intentionally small and must not contain large workflow outputs.
 - The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.
