@@ -2,7 +2,7 @@
 
 AgentOps is a Production Engineering Copilot with Built-In Agent Reliability.
 
-The current product surface is intentionally small and demo-first: a user submits a public GitHub repository URL, then chooses an architecture report, a new-engineer onboarding guide, or an evidence-backed pull request review generated from deterministic repository analysis.
+The current product surface is intentionally small and demo-first: a user submits a public GitHub repository URL, then chooses an architecture report, a new-engineer onboarding guide, an evidence-backed pull request review, or a fixture-driven incident RCA generated from deterministic analysis.
 
 ## M01: Repository Understanding
 
@@ -52,6 +52,24 @@ The PR review includes:
 
 PR review is heuristic and evidence-backed. It does not perform code correctness verification, security auditing, vulnerability scanning, performance analysis, static analysis, style enforcement, language-specific linting, or GitHub review comments.
 
+## M04: Incident Investigation
+
+M04 adds the fourth demo capability: a user chooses the `checkout-latency` incident scenario and optionally provides a public GitHub repository URL, then receives an evidence-backed RCA.
+
+The incident RCA includes:
+
+- Investigation overview.
+- Timeline.
+- Evidence grouped by metrics, logs, deployments, and code changes.
+- Optional repository context.
+- Suspected root cause.
+- Mitigation.
+- Prevention.
+- Assumptions.
+- Analysis metadata.
+
+M04 is intentionally fixture-driven. It uses the synthetic `checkout-latency@v1` scenario, deterministic correlation rules, and heuristic classification. It does not use real observability integrations, LLM reasoning, tracing, RAG, embeddings, or incident-provider plugins.
+
 ## Local Setup
 
 ### Backend
@@ -72,6 +90,7 @@ Useful endpoints:
 - `POST /api/v1/repositories/analyze`
 - `POST /api/v1/repositories/guides/onboarding`
 - `POST /api/v1/repositories/pull-requests/review`
+- `POST /api/v1/incidents/investigate`
 
 Optional environment variable:
 
@@ -89,7 +108,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, and PR Review.
+The frontend runs at `http://localhost:5173` and calls the backend at `http://localhost:8000` by default. Use the mode selector to switch between Architecture Report, Onboarding Guide, PR Review, and Incident RCA.
 
 To point it at a different backend:
 
@@ -158,6 +177,29 @@ Expected review sections:
 - Confidence.
 - Analysis metadata.
 
+## Demo #4
+
+Start the backend and frontend, choose **Incident RCA**, then submit:
+
+```text
+Scenario: checkout-latency
+Repository: https://github.com/tarunngusain08/AgentOps
+```
+
+The repository URL is optional. The demo still works without repository enrichment.
+
+Expected RCA sections:
+
+- Investigation Overview.
+- Timeline.
+- Evidence.
+- Repository Context.
+- Root Cause.
+- Mitigation.
+- Prevention.
+- Assumptions.
+- Analysis metadata.
+
 ## Current Limits
 
 Repository analysis is intentionally lightweight:
@@ -170,4 +212,6 @@ Repository analysis is intentionally lightweight:
 - Onboarding guides use heuristic generation and do not require a model API key.
 - PR review is limited to changed-file metadata, available patch snippets, and repository architecture signals.
 - PR review inspects at most 200 changed files and 1 MB of patch content.
+- Incident investigation currently supports only the synthetic `checkout-latency@v1` fixture.
+- Incident investigation is deterministic and evidence-backed, not a real production telemetry integration.
 - The system does not persist repositories, create embeddings, or perform full dependency/call-graph analysis.

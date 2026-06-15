@@ -3,6 +3,8 @@ import {
   analyzeRepository,
   AnalyzeRepositoryResponse,
   generateOnboardingGuide,
+  IncidentInvestigationResponse,
+  investigateIncident,
   OnboardingGuideResponse,
   PullRequestReviewResponse,
   reviewPullRequest
@@ -10,21 +12,25 @@ import {
 
 const sampleUrl = "https://github.com/tarunngusain08/AgentOps";
 const samplePrNumber = "8";
-type Mode = "architecture" | "onboarding" | "review";
+const sampleScenarioId = "checkout-latency";
+type Mode = "architecture" | "onboarding" | "review" | "incident";
 type ResultState =
   | { mode: "architecture"; value: AnalyzeRepositoryResponse }
   | { mode: "onboarding"; value: OnboardingGuideResponse }
-  | { mode: "review"; value: PullRequestReviewResponse };
+  | { mode: "review"; value: PullRequestReviewResponse }
+  | { mode: "incident"; value: IncidentInvestigationResponse };
 
 const modeLabels: Record<Mode, string> = {
   architecture: "Repository Architecture",
   onboarding: "Onboarding Guide",
-  review: "PR Review"
+  review: "PR Review",
+  incident: "Incident RCA"
 };
 
 export default function App() {
   const [repositoryUrl, setRepositoryUrl] = useState(sampleUrl);
   const [pullRequestNumber, setPullRequestNumber] = useState(samplePrNumber);
+  const [scenarioId, setScenarioId] = useState(sampleScenarioId);
   const [mode, setMode] = useState<Mode>("architecture");
   const [result, setResult] = useState<ResultState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +49,18 @@ export default function App() {
       } else if (mode === "onboarding") {
         const response = await generateOnboardingGuide(repositoryUrl);
         setResult({ mode, value: response });
-      } else {
+      } else if (mode === "review") {
         const parsedPullRequestNumber = Number.parseInt(pullRequestNumber, 10);
         if (!Number.isInteger(parsedPullRequestNumber) || parsedPullRequestNumber <= 0) {
           throw new Error("Pull request number must be a positive integer.");
         }
         const response = await reviewPullRequest(repositoryUrl, parsedPullRequestNumber);
+        setResult({ mode, value: response });
+      } else {
+        if (scenarioId.trim().length === 0) {
+          throw new Error("Scenario ID is required.");
+        }
+        const response = await investigateIncident(scenarioId.trim(), repositoryUrl.trim() || undefined);
         setResult({ mode, value: response });
       }
     } catch (caught) {
@@ -63,7 +75,7 @@ export default function App() {
       <section className="analysis-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AgentOps M03</p>
+            <p className="eyebrow">AgentOps M04</p>
             <h1>{modeLabels[mode]}</h1>
           </div>
           <span className="mode-pill">Heuristic</span>
@@ -91,6 +103,13 @@ export default function App() {
           >
             PR Review
           </button>
+          <button
+            className={mode === "incident" ? "active" : ""}
+            onClick={() => setMode("incident")}
+            type="button"
+          >
+            Incident RCA
+          </button>
         </div>
 
         <form className="repo-form" onSubmit={handleSubmit}>
@@ -102,7 +121,15 @@ export default function App() {
               onChange={(event) => setRepositoryUrl(event.target.value)}
               placeholder={sampleUrl}
             />
-            <button disabled={loading || repositoryUrl.trim().length === 0 || (mode === "review" && pullRequestNumber.trim().length === 0)} type="submit">
+            <button
+              disabled={
+                loading ||
+                (mode !== "incident" && repositoryUrl.trim().length === 0) ||
+                (mode === "review" && pullRequestNumber.trim().length === 0) ||
+                (mode === "incident" && scenarioId.trim().length === 0)
+              }
+              type="submit"
+            >
               {loading ? "Working" : actionLabel(mode)}
             </button>
           </div>
@@ -119,6 +146,17 @@ export default function App() {
               />
             </div>
           ) : null}
+          {mode === "incident" ? (
+            <div className="pr-number-row">
+              <label htmlFor="scenario-id">Incident scenario</label>
+              <input
+                id="scenario-id"
+                onChange={(event) => setScenarioId(event.target.value)}
+                placeholder={sampleScenarioId}
+                value={scenarioId}
+              />
+            </div>
+          ) : null}
         </form>
 
         {error ? <div className="error-banner">{error}</div> : null}
@@ -127,6 +165,7 @@ export default function App() {
       {result?.mode === "architecture" ? <ReportView result={result.value} /> : null}
       {result?.mode === "onboarding" ? <GuideView result={result.value} /> : null}
       {result?.mode === "review" ? <PullRequestReviewView result={result.value} /> : null}
+      {result?.mode === "incident" ? <IncidentRCAView result={result.value} /> : null}
       {!result ? <EmptyState mode={mode} /> : null}
     </main>
   );
@@ -139,7 +178,171 @@ function actionLabel(mode: Mode) {
   if (mode === "onboarding") {
     return "Generate";
   }
-  return "Review";
+  if (mode === "review") {
+    return "Review";
+  }
+  return "Investigate";
+}
+
+function IncidentRCAView({ result }: { result: IncidentInvestigationResponse }) {
+  const { rca, analysis_metadata } = result;
+  const evidenceByType = groupIncidentEvidence(rca.evidence);
+
+  return (
+    <section className="report-grid">
+      <article className="report-section report-wide">
+        <div className="section-title">
+          <h2>Investigation Overview</h2>
+          <span>{rca.confidence} confidence</span>
+        </div>
+        <TraceableTextView value={rca.summary} />
+        <TraceableTextView value={rca.impact} />
+      </article>
+
+      <article className="report-section report-wide">
+        <h2>Timeline</h2>
+        <div className="timeline-list">
+          {rca.timeline.map((event) => (
+            <div className="timeline-item" key={`${event.timestamp}-${event.type}-${event.description}`}>
+              <time>{formatTimestamp(event.timestamp)}</time>
+              <p>{event.description}</p>
+              <EvidenceIds ids={event.evidence_ids} />
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <EvidenceGroup title="Metrics" items={evidenceByType.metric} />
+      <EvidenceGroup title="Logs" items={evidenceByType.log} />
+      <EvidenceGroup title="Deployment" items={evidenceByType.deployment} />
+      <EvidenceGroup title="Code Changes" items={evidenceByType.change} />
+
+      <article className="report-section report-wide">
+        <h2>Repository Context</h2>
+        {rca.repository_context.length > 0 ? (
+          <div className="component-list">
+            {rca.repository_context.map((signal) => (
+              <div className="component-item" key={`${signal.component}-${signal.path}`}>
+                <h3>{signal.component}</h3>
+                <p>{signal.reason}</p>
+                <div className="evidence-list">
+                  <code>{signal.path}</code>
+                  <code>{Math.round(signal.confidence * 100)}% confidence</code>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="muted">No repository context available.</p>
+        )}
+      </article>
+
+      <article className="report-section report-wide">
+        <div className="section-title">
+          <h2>{rca.suspected_root_cause.title}</h2>
+          <span>{rca.suspected_root_cause.category}</span>
+        </div>
+        <TraceableTextView value={rca.suspected_root_cause.explanation} />
+      </article>
+
+      <article className="report-section">
+        <h2>Mitigation</h2>
+        <TraceableTextView value={rca.mitigation} />
+      </article>
+
+      <article className="report-section">
+        <h2>Prevention</h2>
+        <TraceableTextView value={rca.prevention} />
+      </article>
+
+      <ListSection title="Assumptions" items={rca.assumptions} />
+
+      <article className="report-section">
+        <h2>Analysis Metadata</h2>
+        <IncidentMetadataList metadata={analysis_metadata} />
+      </article>
+    </section>
+  );
+}
+
+function EvidenceGroup({
+  items,
+  title
+}: {
+  items: IncidentInvestigationResponse["rca"]["evidence"];
+  title: string;
+}) {
+  return (
+    <article className="report-section">
+      <h2>{title}</h2>
+      {items.length > 0 ? (
+        <div className="evidence-card-list">
+          {items.map((item) => (
+            <div className="evidence-card" key={item.id}>
+              <div className="section-title">
+                <h3>{item.id}</h3>
+                <span>{formatTimestamp(item.timestamp)}</span>
+              </div>
+              <p>{item.description}</p>
+              <code>{item.source}</code>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="muted">None detected.</p>
+      )}
+    </article>
+  );
+}
+
+function TraceableTextView({ value }: { value: { text: string; evidence_ids: string[] } }) {
+  return (
+    <div className="traceable-text">
+      <p>{value.text}</p>
+      <EvidenceIds ids={value.evidence_ids} />
+    </div>
+  );
+}
+
+function EvidenceIds({ ids }: { ids: string[] }) {
+  return (
+    <div className="evidence-list">
+      {ids.map((id) => (
+        <code key={id}>{id}</code>
+      ))}
+    </div>
+  );
+}
+
+function IncidentMetadataList({ metadata }: { metadata: IncidentInvestigationResponse["analysis_metadata"] }) {
+  return (
+    <dl className="metadata-list">
+      <div>
+        <dt>Fixture</dt>
+        <dd>{metadata.fixture_id}@{metadata.fixture_version}</dd>
+      </div>
+      <div>
+        <dt>Repository</dt>
+        <dd>{metadata.repository_analyzed ? "Analyzed" : "Skipped"}</dd>
+      </div>
+      <div>
+        <dt>Evidence</dt>
+        <dd>{metadata.evidence_count}</dd>
+      </div>
+      <div>
+        <dt>Score</dt>
+        <dd>{metadata.confidence_score}</dd>
+      </div>
+      <div>
+        <dt>Duration</dt>
+        <dd>{metadata.analysis_duration_ms}ms</dd>
+      </div>
+      <div>
+        <dt>Mode</dt>
+        <dd>{metadata.analysis_mode}</dd>
+      </div>
+    </dl>
+  );
 }
 
 function PullRequestReviewView({ result }: { result: PullRequestReviewResponse }) {
@@ -383,6 +586,19 @@ function uniqueEvidence(findings: PullRequestReviewResponse["review"]["findings"
   return Array.from(new Set(findings.flatMap((finding) => finding.evidence))).filter(Boolean);
 }
 
+function groupIncidentEvidence(evidence: IncidentInvestigationResponse["rca"]["evidence"]) {
+  return {
+    metric: evidence.filter((item) => item.type === "metric"),
+    log: evidence.filter((item) => item.type === "log"),
+    deployment: evidence.filter((item) => item.type === "deployment"),
+    change: evidence.filter((item) => item.type === "change")
+  };
+}
+
+function formatTimestamp(timestamp: string) {
+  return timestamp.replace("2026-06-10T", "").replace(":00+00:00", " UTC");
+}
+
 function ListSection({ title, items }: { title: string; items: string[] }) {
   return (
     <article className="report-section">
@@ -410,7 +626,9 @@ function EmptyState({ mode }: { mode: Mode }) {
           ? "the architecture report."
           : mode === "onboarding"
             ? "a new-engineer onboarding guide."
-            : "an evidence-backed pull request review."}
+            : mode === "review"
+              ? "an evidence-backed pull request review."
+              : "a deterministic incident RCA."}
       </p>
     </section>
   );

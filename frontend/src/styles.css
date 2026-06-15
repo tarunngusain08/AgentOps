@@ -96,7 +96,7 @@ h3 {
 
 .mode-toggle {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   border: 1px solid #c8d3cb;
   border-radius: 8px;
@@ -257,6 +257,35 @@ li {
   border-radius: 8px;
   padding: 14px;
   background: #fbfcfa;
+}
+
+.timeline-list,
+.evidence-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-item,
+.evidence-card,
+.traceable-text {
+  border: 1px solid #e0e5df;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfcfa;
+}
+
+.timeline-item time {
+  display: block;
+  margin-bottom: 6px;
+  color: #55705d;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.timeline-item p,
+.evidence-card p,
+.traceable-text p {
+  color: #37463d;
 }
 
 .finding-title {
