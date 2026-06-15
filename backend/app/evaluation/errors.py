@@ -39,3 +39,32 @@ class StateFileInvalidError(EvaluationError):
     code = "STATE_FILE_INVALID"
     status_code = 500
 
+
+class TraceNotFoundError(EvaluationError):
+    code = "TRACE_NOT_FOUND"
+    status_code = 404
+
+
+class BaselineRunNotFoundError(EvaluationError):
+    code = "BASELINE_RUN_NOT_FOUND"
+    status_code = 404
+
+
+class CandidateRunNotFoundError(EvaluationError):
+    code = "CANDIDATE_RUN_NOT_FOUND"
+    status_code = 404
+
+
+class RegressionReportWriteError(EvaluationError):
+    code = "REGRESSION_REPORT_WRITE_ERROR"
+    status_code = 500
+
+
+class SuiteVersionMismatchError(EvaluationError):
+    code = "SUITE_VERSION_MISMATCH"
+    status_code = 400
+
+
+class ComparisonCheckSetMismatchError(EvaluationError):
+    code = "COMPARISON_CHECK_SET_MISMATCH"
+    status_code = 400
