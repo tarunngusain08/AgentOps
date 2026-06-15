@@ -114,21 +114,23 @@ else
   TOKEN="$(echo "$CREDENTIAL_OUTPUT" | sed -n 's/^password=//p')"
   [[ -n "$TOKEN" ]] || die "GitHub CLI is unavailable and no token was found from git credential fill."
 
+  PR_CREATE_PAYLOAD="$(PR_TITLE="$PR_TITLE" FEATURE_BRANCH="$FEATURE_BRANCH" DEFAULT_BRANCH="$DEFAULT_BRANCH" PR_BODY="$PR_BODY" python3 -c 'import json, os; print(json.dumps({"title": os.environ["PR_TITLE"], "head": os.environ["FEATURE_BRANCH"], "base": os.environ["DEFAULT_BRANCH"], "body": os.environ["PR_BODY"]}))')"
   PR_RESPONSE="$(curl -sS -X POST "https://api.github.com/repos/$OWNER_REPO/pulls" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    -d "{\"title\":\"$PR_TITLE\",\"head\":\"$FEATURE_BRANCH\",\"base\":\"$DEFAULT_BRANCH\",\"body\":\"$PR_BODY\"}")"
+    -d "$PR_CREATE_PAYLOAD")"
   PR_NUMBER="$(echo "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("number", ""))')"
   PR_URL="$(echo "$PR_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("html_url", ""))')"
   [[ -n "$PR_NUMBER" && -n "$PR_URL" ]] || die "Unable to create PR: $PR_RESPONSE"
   echo "Created PR: $PR_URL"
 
+  PR_MERGE_PAYLOAD="$(PR_TITLE="$PR_TITLE" python3 -c 'import json, os; print(json.dumps({"commit_title": os.environ["PR_TITLE"], "commit_message": "", "merge_method": "squash"}))')"
   MERGE_RESPONSE="$(curl -sS -X PUT "https://api.github.com/repos/$OWNER_REPO/pulls/$PR_NUMBER/merge" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    -d "{\"commit_title\":\"$PR_TITLE\",\"commit_message\":\"\",\"merge_method\":\"squash\"}")"
+    -d "$PR_MERGE_PAYLOAD")"
   MERGED="$(echo "$MERGE_RESPONSE" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("merged", False))')"
   [[ "$MERGED" == "True" ]] || die "Unable to merge PR: $MERGE_RESPONSE"
 fi
