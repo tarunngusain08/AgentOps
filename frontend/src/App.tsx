@@ -2,12 +2,16 @@ import { FormEvent, useState } from "react";
 import {
   analyzeRepository,
   AnalyzeRepositoryResponse,
+  compareEvaluationRuns,
   EvaluationRunResponse,
+  ExecutionTraceResponse,
   generateOnboardingGuide,
   IncidentInvestigationResponse,
   investigateIncident,
+  listRunTraces,
   OnboardingGuideResponse,
   PullRequestReviewResponse,
+  RegressionReportResponse,
   reviewPullRequest,
   runEvaluationSuite
 } from "./api";
@@ -16,20 +20,23 @@ const sampleUrl = "https://github.com/tarunngusain08/AgentOps";
 const samplePrNumber = "8";
 const sampleScenarioId = "checkout-latency";
 const sampleSuiteId = "mvp-demo-suite@v1";
-type Mode = "architecture" | "onboarding" | "review" | "incident" | "evaluation";
+const sampleRunId = "run-000001";
+type Mode = "architecture" | "onboarding" | "review" | "incident" | "evaluation" | "regression";
 type ResultState =
   | { mode: "architecture"; value: AnalyzeRepositoryResponse }
   | { mode: "onboarding"; value: OnboardingGuideResponse }
   | { mode: "review"; value: PullRequestReviewResponse }
   | { mode: "incident"; value: IncidentInvestigationResponse }
-  | { mode: "evaluation"; value: EvaluationRunResponse };
+  | { mode: "evaluation"; value: EvaluationRunResponse; traces: ExecutionTraceResponse[] }
+  | { mode: "regression"; value: RegressionReportResponse };
 
 const modeLabels: Record<Mode, string> = {
   architecture: "Repository Architecture",
   onboarding: "Onboarding Guide",
   review: "PR Review",
   incident: "Incident RCA",
-  evaluation: "Evaluation Suite"
+  evaluation: "Evaluation Suite",
+  regression: "Regression Report"
 };
 
 export default function App() {
@@ -37,6 +44,8 @@ export default function App() {
   const [pullRequestNumber, setPullRequestNumber] = useState(samplePrNumber);
   const [scenarioId, setScenarioId] = useState(sampleScenarioId);
   const [suiteId, setSuiteId] = useState(sampleSuiteId);
+  const [baselineRunId, setBaselineRunId] = useState(sampleRunId);
+  const [candidateRunId, setCandidateRunId] = useState("run-000002");
   const [mode, setMode] = useState<Mode>("architecture");
   const [result, setResult] = useState<ResultState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,11 +77,18 @@ export default function App() {
         }
         const response = await investigateIncident(scenarioId.trim(), repositoryUrl.trim() || undefined);
         setResult({ mode, value: response });
-      } else {
+      } else if (mode === "evaluation") {
         if (suiteId.trim().length === 0) {
           throw new Error("Evaluation suite is required.");
         }
         const response = await runEvaluationSuite(suiteId.trim(), "local-dev");
+        const traces = await listRunTraces(response.run_id);
+        setResult({ mode, value: response, traces });
+      } else {
+        if (baselineRunId.trim().length === 0 || candidateRunId.trim().length === 0) {
+          throw new Error("Baseline and candidate run IDs are required.");
+        }
+        const response = await compareEvaluationRuns(baselineRunId.trim(), candidateRunId.trim());
         setResult({ mode, value: response });
       }
     } catch (caught) {
@@ -129,6 +145,13 @@ export default function App() {
           >
             Evaluation Suite
           </button>
+          <button
+            className={mode === "regression" ? "active" : ""}
+            onClick={() => setMode("regression")}
+            type="button"
+          >
+            Regression Report
+          </button>
         </div>
 
         <form className="repo-form" onSubmit={handleSubmit}>
@@ -143,10 +166,12 @@ export default function App() {
             <button
               disabled={
                 loading ||
-                (mode !== "incident" && mode !== "evaluation" && repositoryUrl.trim().length === 0) ||
+                (["architecture", "onboarding", "review"].includes(mode) && repositoryUrl.trim().length === 0) ||
                 (mode === "review" && pullRequestNumber.trim().length === 0) ||
                 (mode === "incident" && scenarioId.trim().length === 0) ||
-                (mode === "evaluation" && suiteId.trim().length === 0)
+                (mode === "evaluation" && suiteId.trim().length === 0) ||
+                (mode === "regression" &&
+                  (baselineRunId.trim().length === 0 || candidateRunId.trim().length === 0))
               }
               type="submit"
             >
@@ -188,6 +213,28 @@ export default function App() {
               />
             </div>
           ) : null}
+          {mode === "regression" ? (
+            <div className="comparison-inputs">
+              <div className="pr-number-row">
+                <label htmlFor="baseline-run-id">Baseline run</label>
+                <input
+                  id="baseline-run-id"
+                  onChange={(event) => setBaselineRunId(event.target.value)}
+                  placeholder={sampleRunId}
+                  value={baselineRunId}
+                />
+              </div>
+              <div className="pr-number-row">
+                <label htmlFor="candidate-run-id">Candidate run</label>
+                <input
+                  id="candidate-run-id"
+                  onChange={(event) => setCandidateRunId(event.target.value)}
+                  placeholder="run-000002"
+                  value={candidateRunId}
+                />
+              </div>
+            </div>
+          ) : null}
         </form>
 
         {error ? <div className="error-banner">{error}</div> : null}
@@ -197,7 +244,8 @@ export default function App() {
       {result?.mode === "onboarding" ? <GuideView result={result.value} /> : null}
       {result?.mode === "review" ? <PullRequestReviewView result={result.value} /> : null}
       {result?.mode === "incident" ? <IncidentRCAView result={result.value} /> : null}
-      {result?.mode === "evaluation" ? <EvaluationRunView result={result.value} /> : null}
+      {result?.mode === "evaluation" ? <EvaluationRunView result={result.value} traces={result.traces} /> : null}
+      {result?.mode === "regression" ? <RegressionReportView result={result.value} /> : null}
       {!result ? <EmptyState mode={mode} /> : null}
     </main>
   );
@@ -216,10 +264,13 @@ function actionLabel(mode: Mode) {
   if (mode === "incident") {
     return "Investigate";
   }
-  return "Run Suite";
+  if (mode === "evaluation") {
+    return "Run Suite";
+  }
+  return "Compare";
 }
 
-function EvaluationRunView({ result }: { result: EvaluationRunResponse }) {
+function EvaluationRunView({ result, traces }: { result: EvaluationRunResponse; traces: ExecutionTraceResponse[] }) {
   return (
     <section className="report-grid">
       <article className="report-section report-wide">
@@ -280,6 +331,93 @@ function EvaluationRunView({ result }: { result: EvaluationRunResponse }) {
           <code>{String(result.metadata.duration_ms)}ms</code>
         </div>
       </article>
+
+      <article className="report-section report-wide">
+        <h2>Execution Traces</h2>
+        <div className="trace-grid">
+          {traces.map((trace) => (
+            <div className="trace-card" key={trace.trace_id}>
+              <div className="section-title">
+                <h3>{trace.task_id}</h3>
+                <span>{trace.trace_id}</span>
+              </div>
+              <div className="timeline-list">
+                {trace.spans.map((span) => (
+                  <div className="timeline-item" key={`${trace.trace_id}-${span.id}`}>
+                    <time>{span.start_ms}ms</time>
+                    <p>{span.name}</p>
+                    <div className="evidence-list">
+                      <code>{span.status}</code>
+                      {Object.entries(span.metadata).map(([key, value]) => (
+                        <code key={key}>{key}: {String(value)}</code>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function RegressionReportView({ result }: { result: RegressionReportResponse }) {
+  return (
+    <section className="report-grid">
+      <article className="report-section report-wide">
+        <div className="section-title">
+          <h2>{result.status}</h2>
+          <span>{result.comparison_passed ? "Passed" : "Failed"}</span>
+        </div>
+        <p>
+          Compared {result.baseline_run_id} to {result.candidate_run_id} for {result.suite_id}@{result.suite_version}.
+        </p>
+        <div className="evidence-list">
+          <code>{result.report_id}</code>
+          <code>{result.summary.p0_regressions} P0 regressions</code>
+        </div>
+      </article>
+
+      {result.task_comparisons.map((task) => (
+        <article className="report-section report-wide" key={task.id}>
+          <div className="section-title">
+            <h2>{task.id}</h2>
+            <span>{task.status}</span>
+          </div>
+          <div className="evidence-list">
+            <code>baseline {task.baseline_score}</code>
+            <code>candidate {task.candidate_score}</code>
+            <code>delta {task.score_delta}</code>
+            <code>{task.priority}</code>
+          </div>
+          {task.regression_reasons.length > 0 ? (
+            <div className="evidence-list">
+              {task.regression_reasons.map((reason) => (
+                <code key={reason}>{reason}</code>
+              ))}
+            </div>
+          ) : null}
+          <div className="finding-list">
+            {task.check_comparisons.map((check) => (
+              <div className="finding-item" key={check.id}>
+                <div className="finding-title">
+                  <h3>{check.id}</h3>
+                  <span className={`severity severity-${check.status === "REGRESSION" ? "high" : check.status === "IMPROVEMENT" ? "low" : "medium"}`}>
+                    {check.status}
+                  </span>
+                </div>
+                <div className="evidence-list">
+                  <code>baseline {String(check.baseline_passed)}</code>
+                  <code>candidate {String(check.candidate_passed)}</code>
+                  {check.required ? <code>required</code> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      ))}
     </section>
   );
 }
@@ -730,7 +868,9 @@ function EmptyState({ mode }: { mode: Mode }) {
               ? "an evidence-backed pull request review."
               : mode === "incident"
                 ? "a deterministic incident RCA."
-                : "the deterministic MVP evaluation suite."}
+                : mode === "evaluation"
+                  ? "the deterministic MVP evaluation suite."
+                  : "a regression comparison between two local evaluation runs."}
       </p>
     </section>
   );
