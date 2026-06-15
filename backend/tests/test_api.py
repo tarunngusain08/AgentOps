@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 
 from app.github.service import GitHubFile, RepositorySnapshot
+from app.github.service import GitHubError
+from app.incident.fixtures import FixtureValidationError
 from app.main import app
 
 
@@ -151,4 +153,123 @@ def test_pull_request_review_endpoint_uses_github_service_and_returns_review(mon
     assert {finding["category"] for finding in body["review"]["findings"]} >= {
         "potential_risk",
         "testing_concern",
+    }
+
+
+def test_incident_investigation_endpoint_returns_traceable_rca(monkeypatch):
+    import app.api.routes as routes
+
+    monkeypatch.setattr(routes, "GitHubService", FakeGitHubService)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={
+            "scenario_id": "checkout-latency",
+            "repository_url": "https://github.com/example/service",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["scenario_id"] == "checkout-latency"
+    assert body["analysis_metadata"]["fixture_version"] == "v1"
+    assert body["analysis_metadata"]["repository_analyzed"] is True
+    assert body["rca"]["confidence"] == "High"
+    assert body["rca"]["suspected_root_cause"]["category"] == "CONNECTION_POOL_REGRESSION"
+    assert body["rca"]["summary"]["evidence_ids"]
+    assert body["rca"]["mitigation"]["evidence_ids"]
+    assert body["rca"]["repository_context"]
+
+
+def test_incident_investigation_endpoint_allows_missing_repository_url():
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={"scenario_id": "checkout-latency"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["analysis_metadata"]["repository_analyzed"] is False
+    assert any("No repository URL" in assumption for assumption in body["rca"]["assumptions"])
+
+
+def test_incident_investigation_repository_failure_still_returns_rca(monkeypatch):
+    import app.api.routes as routes
+
+    class FailingGitHubService:
+        def load_repository(self, repository_url: str):
+            raise GitHubError("rate limited", status_code=502)
+
+    monkeypatch.setattr(routes, "GitHubService", FailingGitHubService)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={
+            "scenario_id": "checkout-latency",
+            "repository_url": "https://github.com/example/service",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["analysis_metadata"]["repository_analyzed"] is False
+    assert any("Repository analysis was unavailable" in assumption for assumption in body["rca"]["assumptions"])
+
+
+def test_incident_investigation_unknown_scenario_returns_structured_error():
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={"scenario_id": "checkout-latency-v2"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": {
+            "code": "SCENARIO_NOT_FOUND",
+            "message": "Unknown scenario: checkout-latency-v2",
+        }
+    }
+
+
+def test_incident_investigation_empty_scenario_fails_validation():
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={"scenario_id": ""},
+    )
+
+    assert response.status_code == 422
+
+
+def test_incident_investigation_malformed_fixture_returns_structured_error(monkeypatch):
+    import app.api.routes as routes
+
+    class BrokenIncidentInvestigationService:
+        def __init__(self, github_service=None):
+            pass
+
+        def investigate(self, scenario_id: str, repository_url: str | None = None):
+            raise FixtureValidationError("checkout-latency@v1")
+
+    monkeypatch.setattr(routes, "IncidentInvestigationService", BrokenIncidentInvestigationService)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/incidents/investigate",
+        json={"scenario_id": "checkout-latency"},
+    )
+
+    assert response.status_code == 500
+    assert response.json() == {
+        "detail": {
+            "code": "FIXTURE_VALIDATION_ERROR",
+            "message": "Scenario fixture is invalid: checkout-latency@v1",
+        }
     }

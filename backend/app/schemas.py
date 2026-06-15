@@ -108,3 +108,74 @@ class PullRequestReviewResponse(BaseModel):
     pull_request: PullRequestInfo
     analysis_metadata: PRReviewAnalysisMetadata
     review: PullRequestReview
+
+
+class IncidentInvestigationRequest(BaseModel):
+    scenario_id: str = Field(..., min_length=1)
+    repository_url: str | None = None
+
+
+class TraceableTextModel(BaseModel):
+    text: str
+    evidence_ids: list[str]
+
+
+class EvidenceItemModel(BaseModel):
+    id: str
+    type: str
+    source: str
+    timestamp: str
+    description: str
+
+
+class RepositorySignalModel(BaseModel):
+    component: str
+    path: str
+    reason: str
+    confidence: float
+
+
+class TimelineEventModel(BaseModel):
+    timestamp: str
+    type: str
+    description: str
+    evidence_ids: list[str]
+
+
+class RootCauseModel(BaseModel):
+    category: str
+    title: str
+    explanation: TraceableTextModel
+    evidence_ids: list[str]
+
+
+class IncidentAnalysisMetadata(BaseModel):
+    fixture_id: str
+    fixture_version: str
+    repository_analyzed: bool
+    repository_components_matched: list[str]
+    evidence_count: int
+    analysis_duration_ms: int
+    confidence_score: int
+    analysis_mode: str = "heuristic"
+    truncated: bool
+
+
+class IncidentRCA(BaseModel):
+    summary: TraceableTextModel
+    impact: TraceableTextModel
+    timeline: list[TimelineEventModel]
+    evidence: list[EvidenceItemModel]
+    repository_context: list[RepositorySignalModel]
+    suspected_root_cause: RootCauseModel
+    mitigation: TraceableTextModel
+    prevention: TraceableTextModel
+    assumptions: list[str]
+    confidence: str
+    metadata: IncidentAnalysisMetadata
+
+
+class IncidentInvestigationResponse(BaseModel):
+    scenario_id: str
+    analysis_metadata: IncidentAnalysisMetadata
+    rca: IncidentRCA

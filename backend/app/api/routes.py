@@ -6,12 +6,16 @@ from app.analyzer.repository_analyzer import RepositoryAnalyzer
 from app.documentation.documentation_generator import DocumentationGenerator
 from app.github.pull_request_loader import PullRequestLoader
 from app.github.service import GitHubError, GitHubService
+from app.incident.fixtures import FixtureValidationError, ScenarioNotFoundError
+from app.incident.service import IncidentInvestigationService
 from app.reporting.report_generator import ReportGenerator
 from app.review.diff_analyzer import DiffAnalyzer
 from app.review.pr_review_generator import PRReviewGenerator
 from app.schemas import (
     AnalyzeRepositoryRequest,
     AnalyzeRepositoryResponse,
+    IncidentInvestigationRequest,
+    IncidentInvestigationResponse,
     OnboardingGuideResponse,
     PRReviewAnalysisMetadata,
     PullRequestInfo,
@@ -121,4 +125,38 @@ def review_pull_request(request: PullRequestReviewRequest) -> PullRequestReviewR
             truncated=bool(review.metadata["truncated"]),
         ),
         review=asdict(review),
+    )
+
+
+@router.post("/incidents/investigate", response_model=IncidentInvestigationResponse)
+def investigate_incident(request: IncidentInvestigationRequest) -> IncidentInvestigationResponse:
+    service = IncidentInvestigationService(github_service=GitHubService())
+
+    try:
+        rca = service.investigate(
+            scenario_id=request.scenario_id,
+            repository_url=request.repository_url,
+        )
+    except ScenarioNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "SCENARIO_NOT_FOUND",
+                "message": f"Unknown scenario: {exc.scenario_id}",
+            },
+        ) from exc
+    except FixtureValidationError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "FIXTURE_VALIDATION_ERROR",
+                "message": f"Scenario fixture is invalid: {exc.fixture_name}",
+            },
+        ) from exc
+
+    rca_dict = asdict(rca)
+    return IncidentInvestigationResponse(
+        scenario_id=request.scenario_id,
+        analysis_metadata=rca_dict["metadata"],
+        rca=rca_dict,
     )
