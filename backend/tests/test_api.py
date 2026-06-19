@@ -1,12 +1,16 @@
 from fastapi.testclient import TestClient
 
-from app.github.service import GitHubFile, RepositorySnapshot
+from app.github.service import GitHubFile, ParsedRepository, RepositorySnapshot
 from app.github.service import GitHubError
 from app.incident.fixtures import FixtureValidationError
 from app.main import app
 
 
 class FakeGitHubService:
+    def ensure_public_repository(self, repository_url: str) -> ParsedRepository:
+        assert repository_url == "https://github.com/example/service"
+        return ParsedRepository(owner="example", name="service")
+
     def load_repository(self, repository_url: str) -> RepositorySnapshot:
         assert repository_url == "https://github.com/example/service"
         return RepositorySnapshot(
@@ -288,3 +292,28 @@ def test_incident_investigation_malformed_fixture_returns_structured_error(monke
             "message": "Scenario fixture is invalid: checkout-latency@v1",
         }
     }
+
+
+def test_evaluation_mutation_endpoints_require_explicit_opt_in(monkeypatch):
+    monkeypatch.delenv("AGENTOPS_ENABLE_EVALUATION_MUTATIONS", raising=False)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/evaluations/run",
+        json={"suite_id": "mvp-demo-suite@v2", "version_label": "api-test"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"]["code"] == "EVALUATION_MUTATIONS_DISABLED"
+
+
+def test_read_only_evaluation_endpoint_rejects_invalid_identifiers():
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/evaluations/runs/run-000001",
+        params={"suite_id": "mvp-demo-suite", "suite_version": "v2/../../../outside"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "EVALUATION_IDENTIFIER_INVALID"
