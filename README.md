@@ -217,7 +217,17 @@ Optional environment variable:
 export GITHUB_TOKEN=...
 ```
 
-If no token is configured, AgentOps uses unauthenticated GitHub API calls for public repositories.
+AgentOps only supports user-submitted public GitHub repositories. When `GITHUB_TOKEN` is configured, the backend first verifies the repository is public without the token, then uses the token only as a rate-limit helper for public GitHub API calls.
+
+Evaluation artifact mutation endpoints are disabled by default. Enable them only for local HTTP demos:
+
+```bash
+export AGENTOPS_ENABLE_EVALUATION_MUTATIONS=true
+```
+
+This enables `POST /api/v1/evaluations/run` and `POST /api/v1/evaluations/compare`. The CLI evaluation commands do not require this flag.
+
+AgentOps intentionally does not include authentication, user accounts, RBAC, OAuth, sessions, or multi-tenant controls.
 
 ### Frontend
 
