@@ -4,6 +4,8 @@
 
 Engineering copilots are useful only when their outputs can be trusted, reviewed, and regression-tested. AgentOps explores that problem through a local-first portfolio project: deterministic repository workflows plus deterministic evaluation and CI gates.
 
+The project started from a simple product question: can a user paste a repository URL and get useful engineering context? It then added a reliability question: can those workflow outputs be evaluated, compared, and protected from regression?
+
 ## Constraints
 
 AgentOps was built with these constraints:
@@ -37,6 +39,14 @@ The second half is the reliability surface:
 
 The design keeps the workflows small enough to inspect while adding the quality infrastructure needed to detect regressions.
 
+The milestone sequence was intentional:
+
+1. Build visible product workflows first.
+2. Add evaluation only after there was something meaningful to evaluate.
+3. Add regression and CI after evaluation artifacts existed.
+4. Add static intelligence only when it enriched multiple workflows.
+5. Add security hardening before calling the project complete.
+
 ## Challenges
 
 ### Evaluation Design
@@ -48,6 +58,8 @@ Evidence:
 - `backend/app/evaluation/suites.py`
 - `backend/app/evaluation/runner.py`
 - `backend/app/evaluation/hashing.py`
+
+The evaluation design avoids hidden model judgment. Every check is defined in source and can be inspected during review.
 
 ### Regression Detection
 
@@ -61,6 +73,8 @@ Evidence:
 
 - `backend/app/analyzer/repository_index.py`
 - `backend/tests/test_repository_index.py`
+
+The goal was not to build a general static-analysis product. The goal was to add deterministic source-code signals that improve architecture, onboarding, PR review, and incident context.
 
 ### Security Hardening
 
@@ -98,6 +112,17 @@ These are local project results, not production adoption metrics or productivity
 - A shallow repository index can improve workflows without adding parser framework complexity.
 - Security posture can be improved with narrow controls before adding authentication.
 - Portfolio projects benefit from explicit non-goals because they keep scope understandable.
+
+## Interview Discussion Points
+
+AgentOps can support several senior engineering discussions:
+
+- why deterministic evaluation can be preferable to model-judged evaluation in CI
+- how to scope an AI engineering project without drifting into platform sprawl
+- how golden tasks and baselines make AI workflow changes reviewable
+- how to add useful code intelligence without taking on full static-analysis complexity
+- how to document accepted risks instead of pretending a local demo is production SaaS
+- how to sequence product workflows before reliability infrastructure
 
 ## Future Directions
 

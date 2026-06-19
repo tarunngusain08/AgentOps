@@ -12,6 +12,8 @@ What makes AgentOps different:
 - CI blocks P0 evaluation failures and P0 regressions.
 - Repository intelligence is shallow, explainable, and limited to Python, TypeScript/JavaScript, and Go.
 
+If you are reading this repo for the first time, start with the [Project Guide](docs/project-guide.md). It explains the product workflows, backend modules, frontend surface, evaluation system, security boundaries, and final v1.0.0 project status in one narrative.
+
 ## Quick Start
 
 ### Backend
@@ -80,6 +82,7 @@ Diagram sources live in:
 
 Detailed architecture docs:
 
+- [Project Guide](docs/project-guide.md)
 - [System Overview](docs/architecture/system-overview.md)
 - [Design Decisions](docs/architecture/design-decisions.md)
 - [Known Limitations](docs/limitations/known-limitations.md)
@@ -175,7 +178,7 @@ Evaluation docs:
 The v1-readiness benchmark recorded:
 
 - Suite: `mvp-demo-suite@v2`
-- Candidate run: `run-000010`
+- Candidate run: `run-000011`
 - Total tasks: `6`
 - Passed tasks: `6`
 - Failed tasks: `0`
@@ -239,6 +242,7 @@ The GitHub-backed screenshots use the public `https://github.com/fastapi/fastapi
 
 ## v1.0.0 Documentation Package
 
+- [Project Guide](docs/project-guide.md)
 - [Repository Audit](docs/reviews/repository-audit.md)
 - [System Overview](docs/architecture/system-overview.md)
 - [Design Decisions](docs/architecture/design-decisions.md)
