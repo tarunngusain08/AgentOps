@@ -1,0 +1,19 @@
+flowchart TD
+    Suite["Evaluation Suite\nmvp-demo-suite@v2"]
+    Fixtures["Versioned Fixtures\npython_app@v1, go_service@v1, ts_frontend@v1, checkout-latency@v1"]
+    Runner["Evaluation Runner\nworkflow execution"]
+    Checks["Weighted Checks\nrequired checks + expected facts"]
+    Run["Evaluation Run JSON\nresult_hash + fixture_versions"]
+    Traces["Execution Traces\nflat local span timelines"]
+    Baseline["Baseline JSON\ncanonical hash validated"]
+    Compare["Regression Report\nNO_CHANGE, IMPROVEMENT, REGRESSION, MIXED"]
+    Gate["CI Quality Gate\nfail on P0 failure or P0 regression"]
+
+    Suite --> Fixtures
+    Fixtures --> Runner
+    Runner --> Checks
+    Checks --> Run
+    Runner --> Traces
+    Run --> Compare
+    Baseline --> Compare
+    Compare --> Gate

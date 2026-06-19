@@ -1,0 +1,21 @@
+flowchart TD
+    Repository["Public GitHub Repository"]
+    GitHubService["GitHubService\npublic metadata check + selected file loading"]
+    RepositoryAnalyzer["RepositoryAnalyzer\nheuristic architecture analysis"]
+    RepositoryIndex["RepositoryIndex\nPython, TypeScript/JavaScript, Go shallow static intelligence"]
+    Workflows["Engineering Copilot Workflows\nArchitecture, Onboarding, PR Review, Incident RCA"]
+    Evaluation["Golden Task Evaluation\nmvp-demo-suite@v2"]
+    Baseline["Tracked Baseline\nbackend/app/evaluation/baselines/mvp-demo-suite@v2.json"]
+    Regression["Regression Comparator\nsame-suite, same-version comparison"]
+    CI["GitHub Quality Gate\npytest, build, eval, compare"]
+
+    Repository --> GitHubService
+    GitHubService --> RepositoryAnalyzer
+    GitHubService --> RepositoryIndex
+    RepositoryAnalyzer --> Workflows
+    RepositoryIndex --> Workflows
+    Workflows --> Evaluation
+    Evaluation --> Baseline
+    Evaluation --> Regression
+    Baseline --> Regression
+    Regression --> CI
