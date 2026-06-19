@@ -33,12 +33,14 @@ def test_documentation_generator_builds_fastapi_onboarding_guide():
         "How To Run",
         "Architecture Summary",
         "Key Components",
+        "Code Navigation",
         "Common Workflows",
         "Useful Files",
         "Assumptions",
     ]
     assert any("FastAPI" in item.text for item in _section(guide, "Technology Stack").items)
     assert any(item.evidence == ["pyproject.toml"] for item in _section(guide, "How To Run").items)
+    assert _section(guide, "Code Navigation").items
     assert any("Use the test directory" in item.text for item in _section(guide, "Common Workflows").items)
 
 
