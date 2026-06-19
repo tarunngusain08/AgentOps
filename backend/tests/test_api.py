@@ -17,12 +17,24 @@ class FakeGitHubService:
             description="Example service",
             primary_language="Python",
             topics=[],
-            tree_paths=["pyproject.toml", "app/main.py"],
+            tree_paths=["pyproject.toml", "app/main.py", "app/services/checkout.py", "tests/test_checkout.py"],
             top_level_directories=["app"],
-            selected_paths=["pyproject.toml", "app/main.py"],
+            selected_paths=["pyproject.toml", "app/main.py", "app/services/checkout.py", "tests/test_checkout.py"],
             files=[
                 GitHubFile("pyproject.toml", 'dependencies = ["fastapi"]', 25, "manifest"),
                 GitHubFile("app/main.py", "from fastapi import FastAPI", 27, "entry_point"),
+                GitHubFile(
+                    "app/services/checkout.py",
+                    "class CheckoutService:\n    def process_checkout(self):\n        return True\n",
+                    72,
+                    "source_code",
+                ),
+                GitHubFile(
+                    "tests/test_checkout.py",
+                    "from app.services.checkout import CheckoutService\n\ndef test_process_checkout():\n    assert CheckoutService\n",
+                    97,
+                    "test_code",
+                ),
             ],
             truncated=False,
         )
@@ -92,9 +104,11 @@ def test_analyze_endpoint_uses_github_service_and_returns_report(monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert body["repository"]["owner"] == "example"
-    assert body["analysis_metadata"]["files_inspected"] == 2
+    assert body["analysis_metadata"]["files_inspected"] == 4
     assert "FastAPI" in body["report"]["technology_stack"]
     assert body["report"]["entry_points"] == ["app/main.py"]
+    assert body["report"]["code_intelligence"]["metadata"]["symbols_found"] >= 2
+    assert any("CheckoutService" in item for item in body["report"]["code_intelligence"]["top_symbols"])
 
 
 def test_onboarding_guide_endpoint_uses_github_service_and_returns_guide(monkeypatch):
@@ -119,6 +133,7 @@ def test_onboarding_guide_endpoint_uses_github_service_and_returns_guide(monkeyp
         "How To Run",
         "Architecture Summary",
         "Key Components",
+        "Code Navigation",
         "Common Workflows",
         "Useful Files",
         "Assumptions",
