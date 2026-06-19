@@ -28,7 +28,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     run_parser = subparsers.add_parser("run")
-    run_parser.add_argument("--suite", default="mvp-demo-suite@v1")
+    run_parser.add_argument("--suite", default="mvp-demo-suite@v2")
     run_parser.add_argument("--version", default="local")
     run_parser.add_argument("--output", required=True)
 
