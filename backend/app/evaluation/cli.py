@@ -8,10 +8,12 @@ from app.evaluation.baseline import BaselineValidationError, validate_baseline, 
 from app.evaluation.errors import (
     CandidateRunNotFoundError,
     ComparisonCheckSetMismatchError,
+    EvaluationIdentifierInvalidError,
     EvaluationError,
     EvaluationSuiteNotFoundError,
     SuiteVersionMismatchError,
 )
+from app.evaluation.identifiers import validate_evaluation_identifier
 from app.evaluation.json_utils import read_json, write_canonical_json
 from app.evaluation.regression import RegressionComparator
 from app.evaluation.service import EvaluationService
@@ -73,14 +75,22 @@ def _compare(baseline_path: Path, candidate_path: Path, fail_on_p0_regression: b
         validate_baseline(baseline, suite)
         validate_evaluation_run_integrity(candidate)
         report = RegressionComparator().compare(baseline, candidate)
-    except (BaselineValidationError, ComparisonCheckSetMismatchError, SuiteVersionMismatchError, KeyError, ValueError) as exc:
+        report_id = validate_evaluation_identifier(report.report_id, "report_id")
+    except (
+        BaselineValidationError,
+        ComparisonCheckSetMismatchError,
+        EvaluationIdentifierInvalidError,
+        SuiteVersionMismatchError,
+        KeyError,
+        ValueError,
+    ) as exc:
         print(str(exc))
         return INVALID_INPUT
     except (EvaluationSuiteNotFoundError, CandidateRunNotFoundError) as exc:
         print(exc.message)
         return MISSING_INPUT
 
-    report_path = Path(".agentops") / "regression-reports" / f"{report.report_id}.json"
+    report_path = Path(".agentops") / "regression-reports" / f"{report_id}.json"
     from dataclasses import asdict
 
     write_canonical_json(report_path, asdict(report))
