@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from app.evaluation.errors import ComparisonCheckSetMismatchError, EvaluationRunReadError
+from app.evaluation.errors import ComparisonCheckSetMismatchError, EvaluationIdentifierInvalidError, EvaluationRunReadError
 from app.evaluation.models import EXECUTION_TRACE_SCHEMA_VERSION, ExecutionTrace, TraceSpan
 from app.evaluation.regression import IMPROVEMENT, NO_CHANGE, REGRESSION, RegressionComparator
 from app.evaluation.storage import EvaluationStorage
@@ -111,9 +111,27 @@ def test_corrupt_trace_artifact_is_reported(tmp_path):
         EvaluationStorage(root=tmp_path).load_trace("trace-run-000001-task")
 
 
+def test_trace_lookup_rejects_glob_metacharacters(tmp_path):
+    trace_path = tmp_path / "traces" / "run-000001" / "trace-run-000001-task.json"
+    trace_path.parent.mkdir(parents=True)
+    trace_path.write_text(
+        '{"schema_version":"execution-trace/v1","trace_id":"trace-run-000001-task","run_id":"run-000001","task_id":"task","started_at":"2026-06-15T00:00:00+00:00","duration_ms":0,"spans":[]}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(EvaluationIdentifierInvalidError):
+        EvaluationStorage(root=tmp_path).load_trace("*")
+
+
+def test_run_lookup_rejects_path_traversal(tmp_path):
+    with pytest.raises(EvaluationIdentifierInvalidError):
+        EvaluationStorage(root=tmp_path).load_run("mvp-demo-suite", "v2", "../../../outside")
+
+
 def test_evaluation_api_emits_traces_and_compares_runs(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENTOPS_HOME", str(tmp_path))
     monkeypatch.setenv("GITHUB_SHA", "m06-api-sha")
+    monkeypatch.setenv("AGENTOPS_ENABLE_EVALUATION_MUTATIONS", "true")
     client = TestClient(app)
 
     first = client.post(
