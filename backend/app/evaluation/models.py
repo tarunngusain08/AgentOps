@@ -24,6 +24,7 @@ class EvaluationCheck:
     weight: int
     required: bool
     expected_fact: ExpectedFact
+    group: str = "workflow"
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,7 @@ class CheckResult:
     expected: str
     actual: Any
     evidence: list[str]
+    group: str = "workflow"
 
 
 @dataclass(frozen=True)
