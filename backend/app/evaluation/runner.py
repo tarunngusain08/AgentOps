@@ -60,7 +60,7 @@ class EvaluationRunner:
 
     def _run_task(self, task) -> TaskResult:
         try:
-            actual_text, evidence = self.workflow_executor.execute(task.workflow)
+            actual_text, evidence = self.workflow_executor.execute(task.workflow, task.fixture_id)
         except Exception as exc:
             actual_text = f"workflow_status=exception exception={exc.__class__.__name__}"
             evidence = []
@@ -96,6 +96,7 @@ class EvaluationRunner:
             expected=check.expected_fact.value,
             actual=check.expected_fact.value if passed else None,
             evidence=evidence if passed else [],
+            group=check.group,
         )
 
     def _result_hash(
