@@ -4,6 +4,17 @@ AgentOps is a local-first Engineering Copilot reliability project.
 
 It demonstrates how engineering workflows can be made reviewable and regression-tested without relying on LLM-as-judge scoring or hosted infrastructure. A user can analyze a public GitHub repository, generate onboarding documentation, review a pull request for architecture-level risk, investigate a fixture-driven incident, and then run deterministic golden-task evaluation with regression comparison and CI quality gates.
 
+## Current Status
+
+| Signal | Status |
+| --- | --- |
+| Release | `v1.0.0` |
+| Product scope | Feature complete |
+| Security posture | Hardened for local-first use |
+| Evaluation | `mvp-demo-suite@v2` |
+| Regression gate | CI enforced |
+| Portfolio readiness | Ready for review |
+
 What makes AgentOps different:
 
 - Workflow outputs are deterministic and evidence-backed.
@@ -202,6 +213,14 @@ Current hardening includes:
 - trace lookup uses exact file matching
 - HTTP evaluation mutation endpoints require `AGENTOPS_ENABLE_EVALUATION_MUTATIONS=true`
 
+| Area | Status |
+| --- | --- |
+| Public Repo Enforcement | Complete |
+| Identifier Validation | Complete |
+| Path Containment | Complete |
+| Trace Lookup Hardening | Complete |
+| Evaluation Mutation Guard | Complete |
+
 Enable HTTP evaluation mutations only for local demos:
 
 ```bash
@@ -224,25 +243,28 @@ Security docs:
 
 It extracts selected files, symbols, imports, source-to-test links, and truncation metadata. It intentionally does not implement call graphs, type resolution, semantic analysis, Tree-sitter, embeddings, or a parser framework.
 
-## Runtime Demo Screenshots
+## Runtime Evidence Gallery
 
-Screenshots captured from the local runtime are stored under `testing/screenshots/runtime/demo/`.
+Screenshots captured from the local runtime are stored under `docs/images/runtime/`.
 
-The GitHub-backed screenshots use the public `https://github.com/fastapi/fastapi` repository. The PR review screenshot uses public PR `fastapi/fastapi#15761`.
+The GitHub-backed product screenshots use the public `https://github.com/fastapi/fastapi` repository. The PR review screenshot uses public PR `fastapi/fastapi#15761`.
 
 | Demo | Screenshot |
 | ---- | ---------- |
-| Home / ready state | ![Home ready state](testing/screenshots/runtime/demo/00-home-architecture-ready.png) |
-| Architecture report | ![Architecture report](testing/screenshots/runtime/demo/01-architecture-report.png) |
-| Onboarding guide | ![Onboarding guide](testing/screenshots/runtime/demo/02-onboarding-guide.png) |
-| PR review | ![PR review](testing/screenshots/runtime/demo/03-pr-review.png) |
-| Incident RCA | ![Incident RCA](testing/screenshots/runtime/demo/04-incident-rca.png) |
-| Evaluation suite traces | ![Evaluation suite traces](testing/screenshots/runtime/demo/05-evaluation-suite-traces.png) |
-| Regression report | ![Regression report](testing/screenshots/runtime/demo/06-regression-report.png) |
+| Architecture request | ![Architecture request](docs/images/runtime/architecture/01-request.jpg) |
+| Architecture report | ![Architecture report](docs/images/runtime/architecture/02-report-generated.jpg) |
+| Onboarding guide | ![Onboarding guide](docs/images/runtime/onboarding/01-guide-code-navigation.jpg) |
+| PR review | ![PR review](docs/images/runtime/pr-review/01-findings.jpg) |
+| Incident RCA | ![Incident RCA](docs/images/runtime/incident/01-rca-evidence.jpg) |
+| Evaluation suite traces | ![Evaluation suite traces](docs/images/runtime/evaluation/02-suite-results-traces.jpg) |
+| Regression report | ![Regression report](docs/images/runtime/evaluation/04-regression-no-change.jpg) |
+| Security proof | ![Security proof](docs/images/runtime/security/02-security-runtime-proof.jpg) |
 
 ## v1.0.0 Documentation Package
 
 - [Project Guide](docs/project-guide.md)
+- [Documentation Gap Analysis](docs/reviews/docs-gap-analysis.md)
+- [Portfolio Packaging Review](docs/reviews/portfolio-packaging-review.md)
 - [Repository Audit](docs/reviews/repository-audit.md)
 - [System Overview](docs/architecture/system-overview.md)
 - [Design Decisions](docs/architecture/design-decisions.md)

@@ -107,6 +107,27 @@ Consequences:
 - Negative: suite changes require baseline review.
 - Evidence: `backend/app/evaluation/suites.py`, `backend/app/evaluation/baselines/mvp-demo-suite@v2.json`.
 
+## Decision: Golden Tasks As The Evaluation Unit
+
+Status: Accepted
+
+Context: AgentOps needed repeatable workflow checks that could run locally and in CI. Evaluating broad arbitrary repositories would make failures hard to reproduce.
+
+Alternatives:
+
+- arbitrary live repositories
+- manual demo review
+- pinned golden tasks
+
+Decision: AgentOps evaluates pinned workflows with versioned fixtures and expected facts.
+
+Consequences:
+
+- Positive: task failures are reproducible.
+- Positive: fixture versions are recorded in evaluation runs.
+- Negative: the suite proves project regression behavior, not universal product quality.
+- Evidence: `backend/app/evaluation/suites.py`, `backend/app/evaluation/fixtures.py`.
+
 ## Decision: CI Quality Gates
 
 Status: Accepted
@@ -128,3 +149,23 @@ Consequences:
 - Negative: the gate only covers the versioned golden-task suite.
 - Evidence: `.github/workflows/agentops-quality.yml`.
 
+## Decision: Narrow Security Hardening Instead Of Full Auth
+
+Status: Accepted
+
+Context: Security scan findings needed to be addressed without turning a local-first portfolio project into a hosted multi-tenant platform.
+
+Alternatives:
+
+- OAuth and user sessions
+- RBAC and tenant isolation
+- narrow local-first hardening
+
+Decision: AgentOps adds public-repository-only GitHub access, strict artifact identifier validation, path containment, exact trace lookup, and opt-in HTTP evaluation mutations.
+
+Consequences:
+
+- Positive: closes the identified local-demo security findings.
+- Positive: avoids a misleading partial authentication system.
+- Negative: AgentOps remains unsuitable as hosted SaaS without additional auth and tenancy work.
+- Evidence: `backend/app/github/service.py`, `backend/app/evaluation/identifiers.py`, `backend/app/evaluation/storage.py`, `backend/app/api/routes.py`.

@@ -55,6 +55,8 @@ AgentOps exposes six user-visible modes in the frontend:
 
 The first four are product workflows. The last two are reliability workflows.
 
+Runtime screenshot evidence for these modes is linked from the README and stored under `docs/images/runtime/`.
+
 ### Architecture Report
 
 Input:
@@ -374,4 +376,3 @@ Future work should focus on:
 - case-study polish
 
 Future work should not add new infrastructure unless the project goal changes.
-
