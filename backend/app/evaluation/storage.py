@@ -6,12 +6,14 @@ from pathlib import Path
 from typing import Any
 
 from app.evaluation.errors import (
+    EvaluationIdentifierInvalidError,
     EvaluationRunNotFoundError,
     EvaluationRunReadError,
     RegressionReportWriteError,
     StateFileInvalidError,
     TraceNotFoundError,
 )
+from app.evaluation.identifiers import validate_contained_path, validate_evaluation_identifier
 from app.evaluation.json_utils import read_json, write_canonical_json
 from app.evaluation.models import (
     EVALUATION_RUN_SCHEMA_VERSION,
@@ -46,14 +48,25 @@ class EvaluationStorage:
         write_canonical_json(self._trace_path(trace.run_id, trace.trace_id), trace_dict)
 
     def list_traces(self, run_id: str) -> list[dict[str, Any]]:
-        trace_dir = self.root / "traces" / run_id
+        trace_dir = validate_contained_path(
+            self.root / "traces",
+            self.root / "traces" / validate_evaluation_identifier(run_id, "run_id"),
+        )
         if not trace_dir.exists():
             return []
         traces = [self._load_trace_path(path) for path in sorted(trace_dir.glob("*.json"))]
         return sorted(traces, key=lambda trace: trace["task_id"])
 
     def load_trace(self, trace_id: str) -> dict[str, Any]:
-        matches = sorted((self.root / "traces").glob(f"*/{trace_id}.json"))
+        safe_trace_id = validate_evaluation_identifier(trace_id, "trace_id")
+        trace_root = self.root / "traces"
+        if not trace_root.exists():
+            raise TraceNotFoundError(f"Execution trace not found: {trace_id}")
+        matches = []
+        for run_dir in sorted(path for path in trace_root.iterdir() if path.is_dir()):
+            path = validate_contained_path(trace_root, run_dir / f"{safe_trace_id}.json")
+            if path.exists():
+                matches.append(path)
         if not matches:
             raise TraceNotFoundError(f"Execution trace not found: {trace_id}")
         return self._load_trace_path(matches[0])
@@ -63,6 +76,8 @@ class EvaluationStorage:
         self._validate_regression_report_dict(report_dict)
         try:
             write_canonical_json(self._regression_report_path(report.report_id), report_dict)
+        except EvaluationIdentifierInvalidError:
+            raise
         except Exception as exc:
             raise RegressionReportWriteError(f"Regression report could not be written: {report.report_id}") from exc
 
@@ -98,13 +113,22 @@ class EvaluationStorage:
         )
 
     def _run_path(self, suite_id: str, suite_version: str, run_id: str) -> Path:
-        return self.root / "eval-runs" / f"{suite_id}@{suite_version}" / f"{run_id}.json"
+        safe_suite_id = validate_evaluation_identifier(suite_id, "suite_id")
+        safe_suite_version = validate_evaluation_identifier(suite_version, "suite_version")
+        safe_run_id = validate_evaluation_identifier(run_id, "run_id")
+        base = self.root / "eval-runs"
+        return validate_contained_path(base, base / f"{safe_suite_id}@{safe_suite_version}" / f"{safe_run_id}.json")
 
     def _trace_path(self, run_id: str, trace_id: str) -> Path:
-        return self.root / "traces" / run_id / f"{trace_id}.json"
+        safe_run_id = validate_evaluation_identifier(run_id, "run_id")
+        safe_trace_id = validate_evaluation_identifier(trace_id, "trace_id")
+        base = self.root / "traces"
+        return validate_contained_path(base, base / safe_run_id / f"{safe_trace_id}.json")
 
     def _regression_report_path(self, report_id: str) -> Path:
-        return self.root / "regression-reports" / f"{report_id}.json"
+        safe_report_id = validate_evaluation_identifier(report_id, "report_id")
+        base = self.root / "regression-reports"
+        return validate_contained_path(base, base / f"{safe_report_id}.json")
 
     def _load_trace_path(self, path: Path) -> dict[str, Any]:
         try:
