@@ -19,7 +19,7 @@ import {
 const sampleUrl = "https://github.com/tarunngusain08/AgentOps";
 const samplePrNumber = "8";
 const sampleScenarioId = "checkout-latency";
-const sampleSuiteId = "mvp-demo-suite@v1";
+const sampleSuiteId = "mvp-demo-suite@v2";
 const sampleRunId = "run-000001";
 type Mode = "architecture" | "onboarding" | "review" | "incident" | "evaluation" | "regression";
 type ResultState =
@@ -103,7 +103,7 @@ export default function App() {
       <section className="analysis-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">AgentOps M05</p>
+            <p className="eyebrow">AgentOps M08</p>
             <h1>{modeLabels[mode]}</h1>
           </div>
           <span className="mode-pill">Heuristic</span>
@@ -306,6 +306,7 @@ function EvaluationRunView({ result, traces }: { result: EvaluationRunResponse; 
                 {!check.passed ? <p>Actual: {check.actual ?? "Not found"}</p> : null}
                 <div className="evidence-list">
                   <code>{check.id}</code>
+                  <code>{check.group}</code>
                   <code>{check.weight} weight</code>
                   {check.required ? <code>required</code> : null}
                 </div>
@@ -753,6 +754,7 @@ function ReportView({ result }: { result: AnalyzeRepositoryResponse }) {
 
       <ListSection title="Technology Stack" items={report.technology_stack} />
       <ListSection title="Entry Points" items={report.entry_points} />
+      <CodeIntelligenceSection codeIntelligence={report.code_intelligence} />
 
       <article className="report-section report-wide">
         <h2>Components</h2>
@@ -780,6 +782,60 @@ function ReportView({ result }: { result: AnalyzeRepositoryResponse }) {
         <MetadataList metadata={analysis_metadata} />
       </article>
     </section>
+  );
+}
+
+function CodeIntelligenceSection({
+  codeIntelligence
+}: {
+  codeIntelligence: AnalyzeRepositoryResponse["report"]["code_intelligence"];
+}) {
+  return (
+    <article className="report-section report-wide">
+      <div className="section-title">
+        <h2>Code Intelligence</h2>
+        <span>{codeIntelligence.metadata.symbols_found} symbols</span>
+      </div>
+      <div className="evidence-list">
+        {codeIntelligence.languages.map((language) => (
+          <code key={language}>{language}</code>
+        ))}
+        <code>{codeIntelligence.metadata.files_indexed} files indexed</code>
+        <code>{codeIntelligence.metadata.imports_found} imports</code>
+        <code>{codeIntelligence.metadata.tests_found} test links</code>
+        {codeIntelligence.metadata.truncated ? <code>{codeIntelligence.metadata.truncation_reason}</code> : null}
+      </div>
+      <div className="component-list">
+        <CodeIntelligenceList title="Top Symbols" items={codeIntelligence.top_symbols} />
+        <CodeIntelligenceList title="Important Imports" items={codeIntelligence.important_imports} />
+        <CodeIntelligenceList title="Test Links" items={codeIntelligence.test_links} />
+        <CodeIntelligenceList title="Directory Groups" items={codeIntelligence.directory_groups} />
+      </div>
+      {codeIntelligence.assumptions.length > 0 ? (
+        <div className="evidence-list">
+          {codeIntelligence.assumptions.map((assumption) => (
+            <code key={assumption}>{assumption}</code>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function CodeIntelligenceList({ items, title }: { items: string[]; title: string }) {
+  return (
+    <div className="component-item">
+      <h3>{title}</h3>
+      {items.length > 0 ? (
+        <ul>
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">None detected.</p>
+      )}
+    </div>
   );
 }
 
