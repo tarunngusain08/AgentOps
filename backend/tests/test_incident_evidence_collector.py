@@ -1,4 +1,5 @@
 from app.analyzer.repository_analyzer import ComponentFinding, RepositoryAnalysis
+from app.analyzer.repository_index import RepositoryIndex, RepositoryIndexMetadata
 from app.incident.evidence_collector import EvidenceCollector
 from app.incident.fixtures import IncidentFixtureLoader
 
@@ -16,6 +17,20 @@ def test_evidence_collector_separates_evidence_from_repository_context():
         relationships=[],
         assumptions=[],
         overview="Example",
+        repository_index=RepositoryIndex(
+            files=[],
+            symbols=[],
+            imports=[],
+            tests=[],
+            metadata=RepositoryIndexMetadata(
+                files_indexed=0,
+                symbols_found=0,
+                imports_found=0,
+                tests_found=0,
+                truncated=False,
+                truncation_reason="none",
+            ),
+        ),
     )
 
     bundle = EvidenceCollector().collect(fixture, analysis)
@@ -36,4 +51,3 @@ def test_evidence_collector_omits_repository_context_without_analysis():
     bundle = EvidenceCollector().collect(fixture, None)
 
     assert bundle.repository_signals == []
-
