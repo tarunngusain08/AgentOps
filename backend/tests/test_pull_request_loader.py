@@ -1,7 +1,12 @@
 from app.github.pull_request_loader import PullRequestLoader
+from app.github.service import ParsedRepository
 
 
 class FakeGitHubService:
+    def ensure_public_repository(self, repository_url: str) -> ParsedRepository:
+        assert repository_url == "https://github.com/example/service"
+        return ParsedRepository(owner="example", name="service")
+
     def request_json(self, path: str):
         if path == "/repos/example/service/pulls/12":
             return {

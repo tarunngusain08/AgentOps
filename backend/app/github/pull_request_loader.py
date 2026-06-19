@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from urllib.parse import quote
 
-from app.github.service import GitHubService, parse_github_url
+from app.github.service import GitHubService
 
 MAX_CHANGED_FILES = 200
 PER_PAGE = 100
@@ -45,7 +45,7 @@ class PullRequestLoader:
         self.max_changed_files = max_changed_files
 
     def load(self, repository_url: str, pull_request_number: int) -> PullRequestSnapshot:
-        parsed = parse_github_url(repository_url)
+        parsed = self.service.ensure_public_repository(repository_url)
         owner = quote(parsed.owner, safe="")
         repo = quote(parsed.name, safe="")
         pr = self.service.request_json(f"/repos/{owner}/{repo}/pulls/{pull_request_number}")

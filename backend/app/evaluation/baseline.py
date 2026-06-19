@@ -4,6 +4,7 @@ from typing import Any
 
 from app.evaluation.errors import EvaluationError
 from app.evaluation.hashing import evaluation_result_hash
+from app.evaluation.identifiers import validate_evaluation_identifier
 from app.evaluation.models import EVALUATION_RUN_SCHEMA_VERSION, EvaluationSuite
 
 
@@ -15,6 +16,11 @@ class BaselineValidationError(EvaluationError):
 def validate_evaluation_run_integrity(run: dict[str, Any]) -> None:
     if run.get("schema_version") != EVALUATION_RUN_SCHEMA_VERSION:
         raise BaselineValidationError("Evaluation run schema version is invalid.")
+    for field_name in ("run_id", "suite_id", "suite_version"):
+        try:
+            validate_evaluation_identifier(str(run.get(field_name) or ""), field_name)
+        except EvaluationError as exc:
+            raise BaselineValidationError(exc.message) from exc
     if evaluation_result_hash(run) != run.get("result_hash"):
         raise BaselineValidationError("Evaluation run result_hash does not match content.")
 

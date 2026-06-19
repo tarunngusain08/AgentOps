@@ -14,6 +14,7 @@ MAX_FILES = 100
 MAX_TOTAL_BYTES = 2 * 1024 * 1024
 MAX_FILE_BYTES = 512 * 1024
 GITHUB_API_BASE = "https://api.github.com"
+PUBLIC_REPOSITORY_ERROR = "Repository must be public or could not be found."
 
 
 @dataclass(frozen=True)
@@ -85,10 +86,11 @@ class GitHubService:
         self.max_files = max_files
         self.max_total_bytes = max_total_bytes
         self.timeout_seconds = timeout_seconds
+        self._public_repository_cache: dict[tuple[str, str], dict] = {}
 
     def load_repository(self, repository_url: str) -> RepositorySnapshot:
         parsed = parse_github_url(repository_url)
-        repo = self._get_json(f"/repos/{parsed.owner}/{parsed.name}")
+        repo = self._get_public_repository_metadata(parsed)
         default_branch = repo.get("default_branch") or "main"
 
         tree = self._get_tree(parsed.owner, parsed.name, default_branch)
@@ -187,14 +189,38 @@ class GitHubService:
     def request_json(self, path: str) -> dict | list:
         return self._get_json(path)
 
-    def _get_json(self, path: str) -> dict | list:
+    def ensure_public_repository(self, repository_url: str) -> ParsedRepository:
+        parsed = parse_github_url(repository_url)
+        self._get_public_repository_metadata(parsed)
+        return parsed
+
+    def _get_public_repository_metadata(self, parsed: ParsedRepository) -> dict:
+        key = (parsed.owner, parsed.name)
+        if key in self._public_repository_cache:
+            return self._public_repository_cache[key]
+
+        safe_owner = quote(parsed.owner, safe="")
+        safe_repo = quote(parsed.name, safe="")
+        try:
+            repo = self._get_json(f"/repos/{safe_owner}/{safe_repo}", use_token=False)
+        except GitHubError as exc:
+            if exc.status_code == 404:
+                raise GitHubError(PUBLIC_REPOSITORY_ERROR, status_code=404) from exc
+            raise
+        if not isinstance(repo, dict) or repo.get("private") is not False:
+            raise GitHubError(PUBLIC_REPOSITORY_ERROR, status_code=404)
+
+        self._public_repository_cache[key] = repo
+        return repo
+
+    def _get_json(self, path: str, use_token: bool = True) -> dict | list:
         url = f"{GITHUB_API_BASE}{path}"
         headers = {
             "Accept": "application/vnd.github+json",
             "User-Agent": "agentops-m01-repository-understanding",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-        if self.token:
+        if use_token and self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
         request = Request(url, headers=headers)

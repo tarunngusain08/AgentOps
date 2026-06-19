@@ -1,3 +1,4 @@
+import os
 from dataclasses import asdict
 
 from fastapi import APIRouter, HTTPException
@@ -29,6 +30,7 @@ from app.schemas import (
 )
 
 router = APIRouter()
+EVALUATION_MUTATIONS_ENV = "AGENTOPS_ENABLE_EVALUATION_MUTATIONS"
 
 
 def _evaluation_http_error(exc: EvaluationError) -> HTTPException:
@@ -39,6 +41,17 @@ def _evaluation_http_error(exc: EvaluationError) -> HTTPException:
             "message": exc.message,
         },
     )
+
+
+def _require_evaluation_mutations_enabled() -> None:
+    if os.getenv(EVALUATION_MUTATIONS_ENV, "").lower() != "true":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "EVALUATION_MUTATIONS_DISABLED",
+                "message": f"Set {EVALUATION_MUTATIONS_ENV}=true to enable evaluation artifact mutation endpoints.",
+            },
+        )
 
 
 @router.post("/repositories/analyze", response_model=AnalyzeRepositoryResponse)
@@ -187,6 +200,7 @@ def list_evaluation_suites() -> dict:
 
 @router.post("/evaluations/run")
 def run_evaluation_suite(request: EvaluationRunRequest) -> dict:
+    _require_evaluation_mutations_enabled()
     try:
         return EvaluationService().run_suite(
             suite_id=request.suite_id,
@@ -210,6 +224,7 @@ def get_evaluation_run(run_id: str, suite_id: str = "mvp-demo-suite", suite_vers
 
 @router.post("/evaluations/compare")
 def compare_evaluation_runs(request: EvaluationCompareRequest) -> dict:
+    _require_evaluation_mutations_enabled()
     try:
         return EvaluationService().compare_runs(
             suite_id=request.suite_id,

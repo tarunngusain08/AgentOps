@@ -30,6 +30,11 @@ class EvaluationRunReadError(EvaluationError):
     status_code = 500
 
 
+class EvaluationIdentifierInvalidError(EvaluationError):
+    code = "EVALUATION_IDENTIFIER_INVALID"
+    status_code = 400
+
+
 class ImplementationVersionError(EvaluationError):
     code = "IMPLEMENTATION_VERSION_ERROR"
     status_code = 500
