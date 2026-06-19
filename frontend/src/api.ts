@@ -23,6 +23,22 @@ export interface AnalyzeRepositoryResponse {
     important_files: string[];
     relationships: string[];
     assumptions: string[];
+    code_intelligence: {
+      languages: string[];
+      top_symbols: string[];
+      important_imports: string[];
+      test_links: string[];
+      directory_groups: string[];
+      assumptions: string[];
+      metadata: {
+        files_indexed: number;
+        symbols_found: number;
+        imports_found: number;
+        tests_found: number;
+        truncated: boolean;
+        truncation_reason: string;
+      };
+    };
   };
 }
 
@@ -159,6 +175,7 @@ export interface EvaluationRunResponse {
       expected: string;
       actual: string | null;
       evidence: string[];
+      group: string;
     }>;
   }>;
   summary: {
@@ -328,7 +345,7 @@ export async function investigateIncident(
 }
 
 export async function runEvaluationSuite(
-  suiteId = "mvp-demo-suite@v1",
+  suiteId = "mvp-demo-suite@v2",
   versionLabel = "local-dev"
 ): Promise<EvaluationRunResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/evaluations/run`, {
@@ -370,7 +387,7 @@ export async function compareEvaluationRuns(
   baselineRunId: string,
   candidateRunId: string,
   suiteId = "mvp-demo-suite",
-  suiteVersion = "v1"
+  suiteVersion = "v2"
 ): Promise<RegressionReportResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/evaluations/compare`, {
     method: "POST",

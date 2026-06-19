@@ -36,8 +36,8 @@ class StaticWorkflowExecutor:
             "CONNECTION_POOL_REGRESSION metric-1 High"
         )
 
-    def execute(self, workflow: str) -> tuple[str, list[str]]:
-        return f"{self.output} workflow={workflow}", [f"{workflow}-evidence"]
+    def execute(self, workflow: str, fixture_id: str = "fixture@v1") -> tuple[str, list[str]]:
+        return f"{self.output} workflow={workflow} fixture={fixture_id}", [f"{workflow}-evidence"]
 
 
 def test_implementation_version_prefers_github_sha(monkeypatch):
@@ -225,21 +225,42 @@ def test_evaluation_run_api_persists_under_agentops_home(tmp_path, monkeypatch):
     assert (tmp_path / "eval-runs" / "mvp-demo-suite@v1" / "run-000001.json").exists()
 
 
-def test_evaluation_suites_api_lists_p0_suite():
+def test_evaluation_suites_api_lists_v1_and_v2_p0_suites():
     client = TestClient(app)
 
     response = client.get("/api/v1/evaluations/suites")
 
     assert response.status_code == 200
     body = response.json()
-    suite = body["suites"][0]
-    assert suite["qualified_id"] == "mvp-demo-suite@v1"
-    assert suite["p0_tasks"] == [
+    suites = {suite["qualified_id"]: suite for suite in body["suites"]}
+    assert suites["mvp-demo-suite@v1"]["p0_tasks"] == [
         "repository-architecture",
         "onboarding-guide",
         "pr-review",
         "incident-rca",
     ]
+    assert suites["mvp-demo-suite@v2"]["p0_tasks"] == [
+        "repository-architecture",
+        "onboarding-guide",
+        "pr-review",
+        "incident-rca",
+        "static-ts-index",
+        "repository-evolution",
+    ]
+
+
+def test_mvp_demo_suite_v2_static_intelligence_passes():
+    run = EvaluationRunner().run(
+        suite=EvaluationSuiteLoader().load("mvp-demo-suite@v2"),
+        run_id="run-000001",
+        implementation_version="sha",
+        version_label="test",
+    )
+
+    assert run.summary.total_tasks == 6
+    assert run.summary.failed_tasks == 0
+    groups = {check.group for task in run.tasks for check in task.checks}
+    assert {"retrieval", "workflow", "static_intelligence", "regression"} <= groups
 
 
 def _without_execution_fields(run: dict) -> dict:

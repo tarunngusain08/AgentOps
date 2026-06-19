@@ -22,7 +22,7 @@ class PRReviewGenerator:
         findings.extend(self._risk_findings(diff))
         findings.extend(self._breaking_change_findings(diff))
         findings.extend(self._file_attention_findings(diff))
-        findings.extend(self._testing_findings(diff))
+        findings.extend(self._testing_findings(diff, analysis))
         findings.extend(self._architecture_findings(analysis, report, diff))
 
         if not findings:
@@ -151,7 +151,7 @@ class PRReviewGenerator:
             ]
         return []
 
-    def _testing_findings(self, diff: DiffAnalysis) -> list[Finding]:
+    def _testing_findings(self, diff: DiffAnalysis, analysis: RepositoryAnalysis) -> list[Finding]:
         test_files = [file for file in diff.files if file.category == "test"]
         implementation_files = [
             file
@@ -159,12 +159,16 @@ class PRReviewGenerator:
             if file.category in {"manifest", "config", "infrastructure", "entry_point", "source"}
         ]
         if implementation_files and not test_files:
+            related_tests = self._related_tests(analysis, [file.path for file in implementation_files])
+            description = "Implementation, configuration, or build files changed without corresponding test-file changes."
+            if related_tests:
+                description += f" Indexed nearby tests exist: {', '.join(related_tests[:3])}."
             return [
                 Finding(
                     category="testing_concern",
                     severity="Medium",
-                    description="Implementation, configuration, or build files changed without corresponding test-file changes.",
-                    evidence=_paths(implementation_files[:12]),
+                    description=description,
+                    evidence=_dedupe([*_paths(implementation_files[:12]), *related_tests[:6]]),
                 )
             ]
         if test_files and implementation_files:
@@ -220,6 +224,38 @@ class PRReviewGenerator:
                     evidence=_dedupe(touched_entry_points[:12]),
                 )
             )
+        indexed_paths = {file.path for file in diff.files}
+        touched_symbols = [
+            symbol
+            for symbol in analysis.repository_index.symbols
+            if symbol.path in indexed_paths and symbol.kind != "test_function"
+        ]
+        if touched_symbols:
+            symbol_names = ", ".join(self._symbol_name(symbol) for symbol in touched_symbols[:5])
+            findings.append(
+                Finding(
+                    category="architecture_impact",
+                    severity="Medium",
+                    description=f"Changed files contain indexed symbols ({symbol_names}); verify source-level behavior and integration points.",
+                    evidence=_dedupe([symbol.path for symbol in touched_symbols[:12]]),
+                )
+            )
+
+        touched_imports = [
+            item
+            for item in analysis.repository_index.imports
+            if item.path in indexed_paths and not item.module.startswith(".")
+        ]
+        if touched_imports:
+            import_names = ", ".join(sorted({item.module for item in touched_imports})[:5])
+            findings.append(
+                Finding(
+                    category="file_attention",
+                    severity="Low",
+                    description=f"Changed files include indexed imports ({import_names}); review dependency assumptions for these files.",
+                    evidence=_dedupe([item.path for item in touched_imports[:12]]),
+                )
+            )
         return findings
 
     def _confidence(self, diff: DiffAnalysis, findings: list[Finding]) -> str:
@@ -244,6 +280,18 @@ class PRReviewGenerator:
                 seen.add(key)
                 result.append(finding)
         return result
+
+    def _related_tests(self, analysis: RepositoryAnalysis, paths: list[str]) -> list[str]:
+        path_set = set(paths)
+        related = [
+            link.test_path
+            for link in analysis.repository_index.tests
+            if link.source_path in path_set
+        ]
+        return _dedupe(related)
+
+    def _symbol_name(self, symbol) -> str:
+        return f"{symbol.container}.{symbol.name}" if symbol.container else symbol.name
 
 
 def _paths(files: list[ChangedFileSignal]) -> list[str]:

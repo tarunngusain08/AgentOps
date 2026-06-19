@@ -197,7 +197,7 @@ def run_evaluation_suite(request: EvaluationRunRequest) -> dict:
 
 
 @router.get("/evaluations/runs/{run_id}")
-def get_evaluation_run(run_id: str, suite_id: str = "mvp-demo-suite", suite_version: str = "v1") -> dict:
+def get_evaluation_run(run_id: str, suite_id: str = "mvp-demo-suite", suite_version: str = "v2") -> dict:
     try:
         return EvaluationService().load_run(
             suite_id=suite_id,

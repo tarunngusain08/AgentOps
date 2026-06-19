@@ -8,6 +8,8 @@ def test_classifies_supported_architecture_files():
     assert classify_file("next.config.js") == "config"
     assert classify_file("src/main.tsx") == "entry_point"
     assert classify_file("src/main/java/com/example/DemoApplication.java") == "entry_point"
+    assert classify_file("src/components/Button.tsx") == "source_code"
+    assert classify_file("tests/test_checkout.py") == "test_code"
     assert classify_file("README.md") == "readme"
 
 
@@ -30,7 +32,7 @@ def test_select_architecture_files_respects_limits_and_types():
     assert result.path_types["package.json"] == "manifest"
 
 
-def test_select_architecture_files_skips_docs_and_tests_entry_points():
+def test_select_architecture_files_skips_docs_and_selects_test_code():
     paths = [
         "docs_src/example/main.py",
         "fixtures/dom/src/index.js",
@@ -43,7 +45,8 @@ def test_select_architecture_files_skips_docs_and_tests_entry_points():
 
     assert "docs_src/example/main.py" not in result.paths
     assert "fixtures/dom/src/index.js" not in result.paths
-    assert "tests/main.py" not in result.paths
+    assert "tests/main.py" in result.paths
+    assert result.path_types["tests/main.py"] == "test_code"
     assert "app/main.py" in result.paths
     assert "fastapi/applications.py" in result.paths
 

@@ -46,14 +46,14 @@ jobs:
       - name: Run evaluation suite
         run: |
           python -m app.evaluation.cli run \
-            --suite mvp-demo-suite@v1 \
+            --suite mvp-demo-suite@v2 \
             --version ci \
             --output .agentops/eval-runs/ci.json
 
       - name: Compare against baseline
         run: |
           python -m app.evaluation.cli compare \
-            --baseline backend/app/evaluation/baselines/mvp-demo-suite@v1.json \
+            --baseline backend/app/evaluation/baselines/mvp-demo-suite@v2.json \
             --candidate .agentops/eval-runs/ci.json \
             --fail-on-p0-regression
 

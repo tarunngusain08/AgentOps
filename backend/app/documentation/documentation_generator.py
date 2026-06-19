@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from app.analyzer.repository_analyzer import ComponentFinding, RepositoryAnalysis
+from app.analyzer.repository_index import RepositoryImport, RepositorySymbol
 from app.documentation.guide import Guide, GuideItem, GuideSection
 from app.github.service import GitHubFile, RepositorySnapshot
 from app.schemas import ArchitectureReport
@@ -22,6 +23,7 @@ class DocumentationGenerator:
             self._how_to_run(snapshot, assumptions),
             self._architecture_summary(report),
             self._key_components(analysis.components),
+            self._code_navigation(analysis),
             self._common_workflows(snapshot),
             self._useful_files(analysis.important_files),
         ]
@@ -176,6 +178,53 @@ class DocumentationGenerator:
         ]
         return GuideSection("Key Components", items or [GuideItem("No major components were detected.", [])])
 
+    def _code_navigation(self, analysis: RepositoryAnalysis) -> GuideSection:
+        index = analysis.repository_index
+        items: list[GuideItem] = []
+
+        if index.files:
+            languages = ", ".join(sorted({file.language for file in index.files}))
+            items.append(
+                GuideItem(
+                    text=f"Use the indexed {languages} files for source-level navigation before deeper code review.",
+                    evidence=[file.path for file in index.files[:6]],
+                )
+            )
+
+        for symbol in self._navigation_symbols(index.symbols):
+            items.append(
+                GuideItem(
+                    text=f"Start with {self._symbol_name(symbol)} in `{symbol.path}` when tracing {symbol.kind.replace('_', ' ')} behavior.",
+                    evidence=[symbol.path],
+                )
+            )
+
+        for link in index.tests[:4]:
+            items.append(
+                GuideItem(
+                    text=f"Read `{link.test_path}` next to `{link.source_path}` because the files have {link.reason.replace('_', ' ')}.",
+                    evidence=[link.test_path, link.source_path],
+                )
+            )
+
+        for item in self._navigation_imports(index.imports):
+            items.append(
+                GuideItem(
+                    text=f"`{item.path}` imports `{item.module}`, which is a useful dependency signal while onboarding.",
+                    evidence=[item.path],
+                )
+            )
+
+        if not items:
+            items.append(
+                GuideItem(
+                    text="No supported Python, TypeScript/JavaScript, or Go code navigation signals were detected in inspected files.",
+                    evidence=[],
+                )
+            )
+
+        return GuideSection("Code Navigation", items[:10])
+
     def _common_workflows(self, snapshot: RepositorySnapshot) -> GuideSection:
         items: list[GuideItem] = []
         directories = {directory.lower(): directory for directory in snapshot.top_level_directories}
@@ -311,6 +360,22 @@ class DocumentationGenerator:
             if file.source_type == "entry_point" and file.path.endswith(suffix):
                 return file.path
         return None
+
+    def _navigation_symbols(self, symbols: list[RepositorySymbol]) -> list[RepositorySymbol]:
+        priority = {"class": 0, "type": 0, "function": 1, "method": 1, "package": 2, "constant": 3}
+        return sorted(
+            [symbol for symbol in symbols if symbol.kind != "test_function"],
+            key=lambda symbol: (priority.get(symbol.kind, 99), symbol.path, symbol.container or "", symbol.name),
+        )[:5]
+
+    def _navigation_imports(self, imports: list[RepositoryImport]) -> list[RepositoryImport]:
+        return sorted(
+            [item for item in imports if not item.module.startswith(".")],
+            key=lambda item: (item.path, item.module),
+        )[:3]
+
+    def _symbol_name(self, symbol: RepositorySymbol) -> str:
+        return f"{symbol.container}.{symbol.name}" if symbol.container else symbol.name
 
 
 def _dedupe(values) -> list[str]:

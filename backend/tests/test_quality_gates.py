@@ -11,20 +11,20 @@ from app.evaluation.json_utils import read_json, write_canonical_json
 from app.evaluation.suites import EvaluationSuiteLoader
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE_PATH = ROOT / "backend" / "app" / "evaluation" / "baselines" / "mvp-demo-suite@v1.json"
+BASELINE_PATH = ROOT / "backend" / "app" / "evaluation" / "baselines" / "mvp-demo-suite@v2.json"
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "agentops-quality.yml"
 
 
 def test_tracked_baseline_has_valid_hash_and_p0_tasks():
     baseline = read_json(BASELINE_PATH)
-    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v1")
+    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v2")
 
     validate_baseline(baseline, suite)
 
 
 def test_baseline_hash_integrity_detects_manual_edits():
     baseline = read_json(BASELINE_PATH)
-    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v1")
+    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v2")
     baseline["tasks"][0]["score"] = 99
 
     with pytest.raises(BaselineValidationError):
@@ -33,7 +33,7 @@ def test_baseline_hash_integrity_detects_manual_edits():
 
 def test_baseline_p0_task_list_must_match_suite():
     baseline = read_json(BASELINE_PATH)
-    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v1")
+    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v2")
     baseline["tasks"] = baseline["tasks"][1:]
     baseline["result_hash"] = evaluation_result_hash(baseline)
 
@@ -49,7 +49,7 @@ def test_cli_run_and_compare_pass(tmp_path, monkeypatch):
     run_code = cli.main([
         "run",
         "--suite",
-        "mvp-demo-suite@v1",
+        "mvp-demo-suite@v2",
         "--version",
         "test",
         "--output",
@@ -136,3 +136,9 @@ def test_ci_workflow_pins_runtimes_and_uploads_artifacts():
 def test_dependency_lockfiles_exist():
     assert (ROOT / "backend" / "requirements-lock.txt").exists()
     assert (ROOT / "frontend" / "package-lock.json").exists()
+
+
+def test_mvp_demo_suite_v1_remains_loadable():
+    suite = EvaluationSuiteLoader().load("mvp-demo-suite@v1")
+
+    assert suite.qualified_id == "mvp-demo-suite@v1"

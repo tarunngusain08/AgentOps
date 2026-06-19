@@ -45,6 +45,18 @@ class EvidenceCollector:
                     )
                 )
 
+        for symbol in repository_analysis.repository_index.symbols[:6]:
+            if symbol.kind == "test_function":
+                continue
+            signals.append(
+                RepositorySignal(
+                    component="Static Code Intelligence",
+                    path=symbol.path,
+                    reason=f"Indexed {symbol.kind.replace('_', ' ')} {self._symbol_name(symbol)} may help localize repository context.",
+                    confidence=0.62,
+                )
+            )
+
         return sorted(signals, key=lambda signal: (-signal.confidence, signal.path))
 
     @staticmethod
@@ -69,3 +81,6 @@ class EvidenceCollector:
             return "Primary source modules provide code context for the incident workflow."
         return "Repository component may provide useful investigation context."
 
+    @staticmethod
+    def _symbol_name(symbol) -> str:
+        return f"{symbol.container}.{symbol.name}" if symbol.container else symbol.name

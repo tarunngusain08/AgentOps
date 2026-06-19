@@ -1,0 +1,577 @@
+{
+  "fixture_versions": {
+    "incident-rca": "checkout-latency@v1",
+    "onboarding-guide": "go_service@v1",
+    "pr-review": "go_pr_static@v1",
+    "repository-architecture": "python_app@v1",
+    "repository-evolution": "go_service_moved@v1",
+    "static-ts-index": "ts_frontend@v1"
+  },
+  "implementation_version": "m08-baseline-sha",
+  "metadata": {
+    "analysis_mode": "heuristic",
+    "duration_ms": 4
+  },
+  "result_hash": "69daf289f1dd30819af1346cdc5869ceb58a200187edeb37be79698bc88da468",
+  "run_id": "run-000001",
+  "schema_version": "evaluation-run/v1",
+  "suite_id": "mvp-demo-suite",
+  "suite_version": "v2",
+  "summary": {
+    "failed_tasks": 0,
+    "pass_rate": 1.0,
+    "passed_tasks": 6,
+    "total_tasks": 6
+  },
+  "tasks": [
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Architecture workflow completes.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/",
+            "app/main.py",
+            "app/services/checkout.py",
+            "tests/test_checkout.py",
+            "tests/test_checkout.py"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "arch-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "FastAPI",
+          "description": "Architecture report detects FastAPI.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/",
+            "app/main.py",
+            "app/services/checkout.py",
+            "tests/test_checkout.py",
+            "tests/test_checkout.py"
+          ],
+          "expected": "FastAPI",
+          "group": "retrieval",
+          "id": "arch-fastapi",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "code_intelligence",
+          "description": "Architecture report includes code intelligence.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/",
+            "app/main.py",
+            "app/services/checkout.py",
+            "tests/test_checkout.py",
+            "tests/test_checkout.py"
+          ],
+          "expected": "code_intelligence",
+          "group": "static_intelligence",
+          "id": "arch-code-intelligence",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "CheckoutService.process_checkout",
+          "description": "Python service symbol is extracted.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/",
+            "app/main.py",
+            "app/services/checkout.py",
+            "tests/test_checkout.py",
+            "tests/test_checkout.py"
+          ],
+          "expected": "CheckoutService.process_checkout",
+          "group": "static_intelligence",
+          "id": "arch-python-symbol",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "tests/test_checkout.py -> app/services/checkout.py",
+          "description": "Python source is linked to nearby test.",
+          "evidence": [
+            "pyproject.toml",
+            "app/main.py",
+            "app/",
+            "tests/",
+            "app/main.py",
+            "app/services/checkout.py",
+            "tests/test_checkout.py",
+            "tests/test_checkout.py"
+          ],
+          "expected": "tests/test_checkout.py -> app/services/checkout.py",
+          "group": "static_intelligence",
+          "id": "arch-test-link",
+          "passed": true,
+          "required": false,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "python_app@v1",
+      "id": "repository-architecture",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "architecture_report"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Onboarding workflow completes.",
+          "evidence": [
+            "go.mod",
+            "cmd/billing/main.go",
+            "billing/",
+            "cmd/",
+            "billing/service.go",
+            "billing/service_test.go"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "guide-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "Code Navigation",
+          "description": "Guide contains Code Navigation section.",
+          "evidence": [
+            "go.mod",
+            "cmd/billing/main.go",
+            "billing/",
+            "cmd/",
+            "billing/service.go",
+            "billing/service_test.go"
+          ],
+          "expected": "Code Navigation",
+          "group": "static_intelligence",
+          "id": "guide-code-navigation",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "BillingService.CreateInvoice",
+          "description": "Guide references Go method navigation.",
+          "evidence": [
+            "go.mod",
+            "cmd/billing/main.go",
+            "billing/",
+            "cmd/",
+            "billing/service.go",
+            "billing/service_test.go"
+          ],
+          "expected": "BillingService.CreateInvoice",
+          "group": "static_intelligence",
+          "id": "guide-go-method",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "billing/service_test.go",
+          "description": "Guide references nearby Go tests.",
+          "evidence": [
+            "go.mod",
+            "cmd/billing/main.go",
+            "billing/",
+            "cmd/",
+            "billing/service.go",
+            "billing/service_test.go"
+          ],
+          "expected": "billing/service_test.go",
+          "group": "static_intelligence",
+          "id": "guide-go-test-link",
+          "passed": true,
+          "required": false,
+          "weight": 20
+        },
+        {
+          "actual": "How To Run",
+          "description": "Guide still includes How To Run.",
+          "evidence": [
+            "go.mod",
+            "cmd/billing/main.go",
+            "billing/",
+            "cmd/",
+            "billing/service.go",
+            "billing/service_test.go"
+          ],
+          "expected": "How To Run",
+          "group": "workflow",
+          "id": "guide-how-to-run",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        }
+      ],
+      "fixture_id": "go_service@v1",
+      "id": "onboarding-guide",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "onboarding_guide"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "PR review workflow completes.",
+          "evidence": [
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service_test.go",
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service.go"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "review-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "architecture_impact",
+          "description": "PR review includes architecture impact.",
+          "evidence": [
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service_test.go",
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service.go"
+          ],
+          "expected": "architecture_impact",
+          "group": "workflow",
+          "id": "review-architecture-impact",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "BillingService.CreateInvoice",
+          "description": "PR review cites indexed changed symbols.",
+          "evidence": [
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service_test.go",
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service.go"
+          ],
+          "expected": "BillingService.CreateInvoice",
+          "group": "static_intelligence",
+          "id": "review-indexed-symbol",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "billing/service_test.go",
+          "description": "PR review cites nearby indexed tests.",
+          "evidence": [
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service_test.go",
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service.go"
+          ],
+          "expected": "billing/service_test.go",
+          "group": "static_intelligence",
+          "id": "review-test-signal",
+          "passed": true,
+          "required": false,
+          "weight": 20
+        },
+        {
+          "actual": "testing_concern",
+          "description": "PR review keeps testing concern signal.",
+          "evidence": [
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service_test.go",
+            "billing/service.go",
+            "billing/service.go",
+            "billing/service.go"
+          ],
+          "expected": "testing_concern",
+          "group": "regression",
+          "id": "review-testing-concern",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        }
+      ],
+      "fixture_id": "go_pr_static@v1",
+      "id": "pr-review",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "pr_review"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Incident workflow completes.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "incident-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 20
+        },
+        {
+          "actual": "CONNECTION_POOL_REGRESSION",
+          "description": "RCA identifies connection pool regression.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "CONNECTION_POOL_REGRESSION",
+          "group": "workflow",
+          "id": "incident-root-cause",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "metric-1",
+          "description": "RCA includes evidence ids.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "metric-1",
+          "group": "retrieval",
+          "id": "incident-evidence",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "High",
+          "description": "RCA reports high confidence.",
+          "evidence": [
+            "metric-1",
+            "metric-2",
+            "log-1",
+            "log-2",
+            "deploy-1",
+            "deploy-2",
+            "change-1",
+            "change-2"
+          ],
+          "expected": "High",
+          "group": "regression",
+          "id": "incident-confidence",
+          "passed": true,
+          "required": false,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "checkout-latency@v1",
+      "id": "incident-rca",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "incident_rca"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "TypeScript index workflow completes.",
+          "evidence": [
+            "src/components/CheckoutButton.test.tsx",
+            "src/components/CheckoutButton.tsx",
+            "src/main.tsx",
+            "src/components/CheckoutButton.test.tsx"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "ts-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "CheckoutButton",
+          "description": "TypeScript component symbol is extracted.",
+          "evidence": [
+            "src/components/CheckoutButton.test.tsx",
+            "src/components/CheckoutButton.tsx",
+            "src/main.tsx",
+            "src/components/CheckoutButton.test.tsx"
+          ],
+          "expected": "CheckoutButton",
+          "group": "static_intelligence",
+          "id": "ts-symbol",
+          "passed": true,
+          "required": true,
+          "weight": 30
+        },
+        {
+          "actual": "react",
+          "description": "TypeScript import is extracted.",
+          "evidence": [
+            "src/components/CheckoutButton.test.tsx",
+            "src/components/CheckoutButton.tsx",
+            "src/main.tsx",
+            "src/components/CheckoutButton.test.tsx"
+          ],
+          "expected": "react",
+          "group": "static_intelligence",
+          "id": "ts-import",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "src/components/CheckoutButton.test.tsx",
+          "description": "TypeScript test is linked to source.",
+          "evidence": [
+            "src/components/CheckoutButton.test.tsx",
+            "src/components/CheckoutButton.tsx",
+            "src/main.tsx",
+            "src/components/CheckoutButton.test.tsx"
+          ],
+          "expected": "src/components/CheckoutButton.test.tsx",
+          "group": "static_intelligence",
+          "id": "ts-test-link",
+          "passed": true,
+          "required": false,
+          "weight": 30
+        }
+      ],
+      "fixture_id": "ts_frontend@v1",
+      "id": "static-ts-index",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "static_index"
+    },
+    {
+      "checks": [
+        {
+          "actual": "workflow_status=success",
+          "description": "Repository evolution fixture indexes successfully.",
+          "evidence": [
+            "billing/invoice_service.go",
+            "billing/invoice_service_test.go",
+            "cmd/billing/main.go",
+            "billing/invoice_service_test.go"
+          ],
+          "expected": "workflow_status=success",
+          "group": "workflow",
+          "id": "evolution-no-exception",
+          "passed": true,
+          "required": true,
+          "weight": 15
+        },
+        {
+          "actual": "CreateInvoice",
+          "description": "Moved Go symbol remains detected.",
+          "evidence": [
+            "billing/invoice_service.go",
+            "billing/invoice_service_test.go",
+            "cmd/billing/main.go",
+            "billing/invoice_service_test.go"
+          ],
+          "expected": "CreateInvoice",
+          "group": "static_intelligence",
+          "id": "evolution-symbol",
+          "passed": true,
+          "required": true,
+          "weight": 35
+        },
+        {
+          "actual": "billing/invoice_service.go",
+          "description": "Moved source path is indexed.",
+          "evidence": [
+            "billing/invoice_service.go",
+            "billing/invoice_service_test.go",
+            "cmd/billing/main.go",
+            "billing/invoice_service_test.go"
+          ],
+          "expected": "billing/invoice_service.go",
+          "group": "regression",
+          "id": "evolution-source-path",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        },
+        {
+          "actual": "billing/invoice_service_test.go",
+          "description": "Moved test still links to source.",
+          "evidence": [
+            "billing/invoice_service.go",
+            "billing/invoice_service_test.go",
+            "cmd/billing/main.go",
+            "billing/invoice_service_test.go"
+          ],
+          "expected": "billing/invoice_service_test.go",
+          "group": "regression",
+          "id": "evolution-test-link",
+          "passed": true,
+          "required": true,
+          "weight": 25
+        }
+      ],
+      "fixture_id": "go_service_moved@v1",
+      "id": "repository-evolution",
+      "passed": true,
+      "priority": "P0",
+      "score": 100,
+      "workflow": "static_index"
+    }
+  ],
+  "version_label": "baseline-v0.8.0"
+}

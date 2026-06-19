@@ -44,6 +44,7 @@ class RepositorySnapshot:
     selected_paths: list[str]
     files: list[GitHubFile] = field(default_factory=list)
     truncated: bool = False
+    truncation_reason: str = "none"
 
 
 class GitHubError(Exception):
@@ -98,7 +99,13 @@ class GitHubService:
         ]
         top_level_directories = self._top_level_directories(tree_paths)
         selection = select_architecture_files(tree_paths, self.max_files)
-        files = self._load_selected_files(parsed.owner, parsed.name, default_branch, selection)
+        files, byte_limited = self._load_selected_files(parsed.owner, parsed.name, default_branch, selection)
+        truncated = bool(tree.get("truncated")) or selection.truncated or byte_limited
+        truncation_reason = "none"
+        if selection.truncated or bool(tree.get("truncated")):
+            truncation_reason = "file_limit"
+        elif byte_limited:
+            truncation_reason = "byte_limit"
 
         return RepositorySnapshot(
             owner=parsed.owner,
@@ -112,7 +119,8 @@ class GitHubService:
             top_level_directories=top_level_directories,
             selected_paths=selection.paths,
             files=files,
-            truncated=bool(tree.get("truncated")) or selection.truncated,
+            truncated=truncated,
+            truncation_reason=truncation_reason,
         )
 
     def _load_selected_files(
@@ -121,12 +129,14 @@ class GitHubService:
         repo: str,
         ref: str,
         selection: FileSelectionResult,
-    ) -> list[GitHubFile]:
+    ) -> tuple[list[GitHubFile], bool]:
         files: list[GitHubFile] = []
         total_bytes = 0
+        byte_limited = False
 
         for path in selection.paths:
             if total_bytes >= self.max_total_bytes:
+                byte_limited = True
                 break
             file_json = self._get_content(owner, repo, path, ref)
             if not isinstance(file_json, dict):
@@ -135,6 +145,7 @@ class GitHubService:
                 continue
             size = int(file_json.get("size") or 0)
             if size > MAX_FILE_BYTES or total_bytes + size > self.max_total_bytes:
+                byte_limited = True
                 continue
             encoded = file_json.get("content")
             if not isinstance(encoded, str):
@@ -157,7 +168,7 @@ class GitHubService:
             )
             total_bytes += size
 
-        return files
+        return files, byte_limited
 
     def _get_tree(self, owner: str, repo: str, ref: str) -> dict:
         safe_ref = quote(ref, safe="")
