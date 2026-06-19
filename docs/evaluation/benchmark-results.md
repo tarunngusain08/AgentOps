@@ -98,6 +98,17 @@ The evaluation run produced six task trace files under `.agentops/traces/run-000
 
 Trace files are local runtime artifacts and are not committed.
 
+## Screenshot Evidence
+
+Runtime screenshots for the evaluation workflow are committed under `docs/images/runtime/evaluation/`.
+
+| Evidence | Screenshot |
+| --- | --- |
+| Suite request | ![Evaluation suite request](../images/runtime/evaluation/01-suite-request.jpg) |
+| Suite results and traces | ![Evaluation suite results and traces](../images/runtime/evaluation/02-suite-results-traces.jpg) |
+| Regression request | ![Regression request](../images/runtime/evaluation/03-regression-request.jpg) |
+| Regression `NO_CHANGE` result | ![Regression no change](../images/runtime/evaluation/04-regression-no-change.jpg) |
+
 ## Validation Output
 
 Additional release validation completed before documentation generation:
