@@ -94,3 +94,11 @@ Evaluation runs, traces, and regression reports are local JSON files under `.age
 
 The v1.0.0 codebase is hardened for its stated local-first scope. The main security controls are public-repository-only GitHub access, strict evaluation artifact identifiers, path containment checks, exact trace lookup, and opt-in HTTP evaluation mutations.
 
+## Runtime Evidence
+
+Security runtime screenshots are committed under `docs/images/runtime/security/`.
+
+| Evidence | Screenshot |
+| --- | --- |
+| Evaluation mutation guard | ![Evaluation mutation guard](../images/runtime/security/01-evaluation-mutation-guard.jpg) |
+| Runtime security proof | ![Runtime security proof](../images/runtime/security/02-security-runtime-proof.jpg) |
