@@ -209,6 +209,7 @@ def test_expected_fact_matching_normalizes_text():
 def test_evaluation_run_api_persists_under_agentops_home(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENTOPS_HOME", str(tmp_path))
     monkeypatch.setenv("GITHUB_SHA", "api-test-sha")
+    monkeypatch.setenv("AGENTOPS_ENABLE_EVALUATION_MUTATIONS", "true")
     client = TestClient(app)
 
     response = client.post(
