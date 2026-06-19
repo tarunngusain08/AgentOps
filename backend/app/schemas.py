@@ -25,6 +25,25 @@ class Component(BaseModel):
     evidence: list[str]
 
 
+class CodeIntelligenceMetadata(BaseModel):
+    files_indexed: int
+    symbols_found: int
+    imports_found: int
+    tests_found: int
+    truncated: bool
+    truncation_reason: str
+
+
+class CodeIntelligence(BaseModel):
+    languages: list[str]
+    top_symbols: list[str]
+    important_imports: list[str]
+    test_links: list[str]
+    directory_groups: list[str]
+    assumptions: list[str]
+    metadata: CodeIntelligenceMetadata
+
+
 class ArchitectureReport(BaseModel):
     overview: str
     technology_stack: list[str]
@@ -33,6 +52,7 @@ class ArchitectureReport(BaseModel):
     important_files: list[str]
     relationships: list[str]
     assumptions: list[str]
+    code_intelligence: CodeIntelligence
 
 
 class AnalyzeRepositoryResponse(BaseModel):
@@ -182,13 +202,13 @@ class IncidentInvestigationResponse(BaseModel):
 
 
 class EvaluationRunRequest(BaseModel):
-    suite_id: str = Field(default="mvp-demo-suite@v1", min_length=1)
+    suite_id: str = Field(default="mvp-demo-suite@v2", min_length=1)
     version_label: str = Field(default="local-dev", min_length=1)
 
 
 class EvaluationCompareRequest(BaseModel):
     suite_id: str = Field(default="mvp-demo-suite", min_length=1)
-    suite_version: str = Field(default="v1", min_length=1)
+    suite_version: str = Field(default="v2", min_length=1)
     baseline_run_id: str = Field(..., min_length=1)
     candidate_run_id: str = Field(..., min_length=1)
 
