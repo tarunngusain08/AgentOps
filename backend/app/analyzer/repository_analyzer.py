@@ -6,6 +6,7 @@ from collections import Counter
 from dataclasses import dataclass
 
 from app.analyzer.file_selection import classify_file
+from app.analyzer.repository_index import RepositoryIndex, RepositoryIndexer
 from app.github.service import RepositorySnapshot
 
 
@@ -25,17 +26,22 @@ class RepositoryAnalysis:
     relationships: list[str]
     assumptions: list[str]
     overview: str
+    repository_index: RepositoryIndex
 
 
 class RepositoryAnalyzer:
+    def __init__(self, indexer: RepositoryIndexer | None = None):
+        self.indexer = indexer or RepositoryIndexer()
+
     def analyze(self, snapshot: RepositorySnapshot) -> RepositoryAnalysis:
         technology_stack = self._detect_technology_stack(snapshot)
         components = self._detect_components(snapshot)
         entry_points = self._detect_entry_points(snapshot)
         important_files = self._important_files(snapshot)
-        relationships = self._relationships(components, technology_stack)
-        assumptions = self._assumptions(snapshot)
-        overview = self._overview(snapshot, technology_stack, components)
+        repository_index = self.indexer.build(snapshot)
+        relationships = self._relationships(components, technology_stack, repository_index)
+        assumptions = self._assumptions(snapshot, repository_index)
+        overview = self._overview(snapshot, technology_stack, components, repository_index)
 
         return RepositoryAnalysis(
             technology_stack=technology_stack,
@@ -45,6 +51,7 @@ class RepositoryAnalyzer:
             relationships=relationships,
             assumptions=assumptions,
             overview=overview,
+            repository_index=repository_index,
         )
 
     def _detect_technology_stack(self, snapshot: RepositorySnapshot) -> list[str]:
@@ -246,7 +253,12 @@ class RepositoryAnalyzer:
         important.extend(f"{directory}/" for directory in snapshot.top_level_directories[:12])
         return _dedupe(important)
 
-    def _relationships(self, components: list[ComponentFinding], stack: list[str]) -> list[str]:
+    def _relationships(
+        self,
+        components: list[ComponentFinding],
+        stack: list[str],
+        repository_index: RepositoryIndex,
+    ) -> list[str]:
         names = {component.name for component in components}
         relationships: list[str] = []
 
@@ -266,16 +278,25 @@ class RepositoryAnalyzer:
             relationships.append("FastAPI application entry points define routes and delegate request handling to Python modules.")
         if "Spring Boot" in stack:
             relationships.append("Spring Boot application entry point starts controllers, services, and repository-style components.")
+        if repository_index.tests:
+            relationships.append("Indexed tests map back to source files through deterministic path and stem matching.")
+        if repository_index.symbols:
+            relationships.append("Static code intelligence identifies shallow symbols and imports for source-level navigation.")
 
         return relationships or ["Repository structure suggests components collaborate through the main application entry points."]
 
-    def _assumptions(self, snapshot: RepositorySnapshot) -> list[str]:
+    def _assumptions(self, snapshot: RepositorySnapshot, repository_index: RepositoryIndex) -> list[str]:
         assumptions = [
             "Analysis is heuristic and based on selected architecture signals, not a full clone or AST-level dependency graph.",
             "README content is optional; file structure, manifests, entry points, and top-level directories are prioritized.",
+            "Static code intelligence is shallow and deterministic; it does not perform call graph, type resolution, or semantic analysis.",
         ]
         if snapshot.truncated:
             assumptions.append("GitHub tree or file selection was truncated, so some files may not be represented.")
+        if repository_index.metadata.truncated:
+            assumptions.append(f"Repository index was truncated because of {repository_index.metadata.truncation_reason}.")
+        if repository_index.files and not repository_index.symbols:
+            assumptions.append("Supported source files were indexed, but no shallow symbols were detected.")
         if not snapshot.files:
             assumptions.append("No selected files were fetched; report is based mainly on repository metadata and directory structure.")
         return assumptions
@@ -285,13 +306,20 @@ class RepositoryAnalyzer:
         snapshot: RepositorySnapshot,
         stack: list[str],
         components: list[ComponentFinding],
+        repository_index: RepositoryIndex,
     ) -> str:
         stack_text = ", ".join(stack[:5]) if stack else "unknown technologies"
         component_text = ", ".join(component.name for component in components[:4]) or "repository-level modules"
         description = f" {snapshot.description}" if snapshot.description else ""
+        index_text = ""
+        if repository_index.metadata.files_indexed:
+            index_text = (
+                f" Static code intelligence indexed {repository_index.metadata.files_indexed} source file(s) "
+                f"and {repository_index.metadata.symbols_found} symbol(s)."
+            )
         return (
             f"{snapshot.owner}/{snapshot.name} appears to be a {stack_text} project with "
-            f"{component_text}.{description}"
+            f"{component_text}.{description}{index_text}"
         )
 
 
