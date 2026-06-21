@@ -265,6 +265,7 @@ The GitHub-backed product screenshots use the public `https://github.com/fastapi
 - [Project Guide](docs/project-guide.md)
 - [Documentation Gap Analysis](docs/reviews/docs-gap-analysis.md)
 - [Portfolio Packaging Review](docs/reviews/portfolio-packaging-review.md)
+- [Strategic Evolution Review](docs/strategy/agentops-strategic-evolution-review.md)
 - [Repository Audit](docs/reviews/repository-audit.md)
 - [System Overview](docs/architecture/system-overview.md)
 - [Design Decisions](docs/architecture/design-decisions.md)
