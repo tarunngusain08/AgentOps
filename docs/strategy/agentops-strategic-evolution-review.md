@@ -149,165 +149,153 @@ Deterministic, local-first reliability analysis for engineering-agent workflows.
 
 This gap is not the same as generic tracing, generic evaluation, or production incident management. It combines execution evidence, engineering workflow context, and deterministic pass/fail or failure taxonomy.
 
-## Portfolio Gap Matrix
+## Senior-to-Staff Signal
 
-| Skill | Current Evidence | Demonstrated? | Best Way To Improve |
+The strategic question is not only "what can AgentOps become?" It is also "what gets the portfolio from senior engineer evidence to staff engineer evidence?"
+
+| Skill | Current AgentOps Evidence | Strength | Best Next Proof |
 | --- | --- | --- | --- |
-| Backend Systems | FastAPI modules, APIs, evaluation services | Yes | Maintain |
-| API Design | Repository, PR, incident, evaluation endpoints | Yes | Maintain |
-| Evaluation Systems | Golden tasks, baselines, regression comparison | Yes | Maintain |
-| Security Hardening | Public repo guard, identifier validation, mutation guard | Yes | Maintain |
-| CI/CD | GitHub quality gate | Yes | Maintain |
-| Repository Intelligence | RepositoryIndex | Yes | Maintain |
-| Distributed Systems | Local-only architecture | Partial | Better in Project #2 |
-| Event-Driven Architecture | None | No | Better in Project #2 |
-| Workflow Orchestration | Evaluation runner only | Partial | Runtime observability could improve |
+| Backend Systems | FastAPI modules, APIs, evaluation services | Strong | Maintain |
+| API Design | Repository, PR, incident, evaluation endpoints | Strong | Maintain |
+| AI Evaluation | Golden tasks, baselines, regression comparison | Strong | Maintain |
+| Security Hardening | Public repo guard, identifier validation, mutation guard | Good | Maintain |
+| CI/CD | GitHub quality gate | Good | Maintain |
+| Repository Intelligence | `RepositoryIndex` | Strong | Maintain |
+| Distributed Systems | Local-only architecture | Weak | Better in Project #2 |
+| Event-Driven Architecture | No event pipeline | Missing | Better in Project #2 |
+| Workflow Engines | Evaluation runner only | Partial | Project #2 or runtime trace model |
 | Cloud-Native Engineering | CI and local app only | Partial | Better in Project #2 |
-| Observability | Local execution traces | Partial | Runtime observability improves |
-| SRE | Incident RCA fixture only | Partial | Runtime observability or Project #2 |
-| Data Engineering | Local JSON artifacts only | No | Better in Project #2 |
+| Observability | Local evaluation traces | Partial | Runtime observability improves |
+| SRE / Production Operations | Fixture-driven RCA only | Weak | Better in Project #2 |
+| Data Infrastructure | Local JSON artifacts only | Missing | Better in Project #2 |
 
-Conclusion: AgentOps already covers the AI evaluation and backend portfolio story. A second project would cover more missing skills than additional AgentOps reporting.
+Conclusion: AgentOps already covers the AI evaluation and backend portfolio story. The largest remaining career gaps are distributed, event-driven, cloud-native, operational, and data-oriented. Those gaps are not naturally solved by adding more reporting to AgentOps.
 
-## Futures Evaluated
+## Portfolio Strategy vs Product Strategy
 
-### Future 0: Freeze At v1.0.0 And Start Project #2
+The earlier matrix mixed two different decisions:
 
-What it means: treat AgentOps as portfolio-complete, polish presentation only, and build a second project focused on distributed systems or event-driven infrastructure.
+```text
+Portfolio strategy:
+Should the next six months go into AgentOps or a second project?
 
-Primary user: hiring manager and senior/staff interviewer.
+Product strategy:
+If AgentOps continues, which product direction is strongest?
+```
 
-Buyer: not applicable.
+Those should be evaluated separately.
 
-Champion: candidate.
+Freezing AgentOps and building Project #2 is not an AgentOps product direction. It is a career portfolio allocation decision. Runtime observability, reliability analytics, and evaluation control plane are AgentOps product directions. They compete only after deciding that AgentOps should continue.
 
-Operator: candidate.
+## Portfolio Strategy Matrix
 
-Why now:
+Scoring scale: `1` weak, `5` strong. Weights reflect portfolio value for a senior engineer targeting staff-adjacent interviews.
 
-- AgentOps has a coherent v1 story and readiness package.
-- More AgentOps work risks incremental returns.
-- Missing career signals are mostly outside the current architecture.
+| Criteria | Weight | AgentOps v1 + Project #2 | AgentOps v1 + One More AgentOps Milestone | AgentOps v1 + No New Engineering |
+| --- | ---: | ---: | ---: | ---: |
+| Closes distributed systems gap | 10 | 5 | 2 | 1 |
+| Closes event-driven gap | 10 | 5 | 2 | 1 |
+| Closes production operations gap | 9 | 5 | 3 | 1 |
+| Adds distinct interview surface | 9 | 5 | 3 | 2 |
+| Preserves AgentOps coherence | 8 | 5 | 3 | 5 |
+| Avoids overextending AgentOps | 8 | 5 | 3 | 5 |
+| Implementation focus | 7 | 4 | 3 | 5 |
+| Portfolio complement | 7 | 5 | 3 | 2 |
+| Opportunity cost | 7 | 5 | 3 | 4 |
 
-Success signals:
+Weighted result:
 
-- AgentOps can be demoed cleanly as a completed v1 system.
-- Project #2 demonstrates distributed systems or event-driven operations that AgentOps does not.
-- The combined portfolio tells a broader senior/staff story.
+| Portfolio Strategy | Weighted Score |
+| --- | ---: |
+| AgentOps v1 + Project #2 | `357` |
+| AgentOps v1 + One More AgentOps Milestone | `194` |
+| AgentOps v1 + No New Engineering | `198` |
 
-Architecture cost:
+Interpretation:
 
-- Operational complexity: `1/10`
-- Maintenance burden: `1/10`
-- Local-first compatibility: `10/10`
+- Project #2 wins as a portfolio strategy because it covers skill gaps AgentOps is not designed to cover.
+- "No new engineering" preserves coherence but does not build new evidence.
+- One more AgentOps milestone is valuable only if it materially changes the architecture category.
 
-Likely new components: none in AgentOps.
+## AgentOps Product Direction Matrix
 
-Likely failure modes: portfolio stagnation if Project #2 is not started.
+This matrix ignores Project #2 and asks only: if AgentOps continues, what is the best product direction?
 
-Opportunity cost: low if Project #2 is selected well; high if the user keeps polishing AgentOps indefinitely.
+| Criteria | Weight | Complete Freeze | Reliability Analytics | Runtime Observability | Evaluation Control Plane |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Technical depth | 10 | 1 | 2 | 5 | 3 |
+| Architecture depth | 10 | 1 | 2 | 5 | 4 |
+| Differentiation | 10 | 3 | 2 | 4 | 2 |
+| Staff signal | 9 | 1 | 2 | 5 | 3 |
+| Runtime systems modeling | 9 | 1 | 1 | 5 | 2 |
+| Observability depth | 8 | 1 | 2 | 5 | 3 |
+| Moat potential | 8 | 2 | 2 | 4 | 2 |
+| Local-first compatibility | 7 | 5 | 5 | 4 | 3 |
+| Maintenance burden fit | 6 | 5 | 4 | 3 | 2 |
+| Implementation risk | 6 | 5 | 5 | 3 | 3 |
+| Incremental value over v1 | 6 | 1 | 2 | 5 | 3 |
 
-Recommended Project #2 category: event-driven reliability platform or workflow orchestration system.
+Weighted result:
 
-Why this category:
+| AgentOps Product Direction | Weighted Score |
+| --- | ---: |
+| Runtime Observability | `405` |
+| Evaluation Control Plane | `252` |
+| Reliability Analytics | `218` |
+| Complete Freeze | `206` |
 
-- It fills distributed systems, event-driven architecture, cloud-native operations, SRE, and data pipeline gaps.
-- It complements AgentOps instead of crowding it.
-- It gives interviewers a second distinct system to discuss.
+Interpretation:
 
-Incremental path:
+- If AgentOps continues, runtime observability is the strongest product direction.
+- Reliability analytics is too close to reporting over existing artifacts.
+- Evaluation control plane is natural but less differentiated and more likely to compete with established evaluation platforms.
+- Complete freeze remains the better portfolio choice when compared against Project #2, but it is not a product direction.
 
-- `P01`: event ingestion service with durable queue, idempotency, retries, and DLQ.
-- `P02`: workflow execution engine with state transitions and replay.
-- `P03`: operational dashboard with failure analysis, metrics, and runbook hooks.
+## AgentOps Product Futures
 
-Moat:
+### Reliability Analytics
 
-- Not a product moat inside AgentOps.
-- Strong portfolio moat: two focused systems instead of one overextended system.
+Reliability analytics would add scorecards, failure taxonomy, evaluation drift summaries, and release-readiness reports.
 
-### Future 1: Agent Reliability Analytics
-
-What it means: add reliability scorecards, failure taxonomy, evaluation drift summaries, and release readiness reports.
-
-Primary user: AI platform engineer.
-
-Secondary user: engineering manager.
+User: AI platform engineer.
 
 Buyer: AI platform lead.
-
-Champion: staff AI engineer.
 
 Operator: developer productivity team.
 
 Why now:
 
-- It is closest to existing evaluation artifacts.
-- It can summarize current runs, regression reports, traces, and task metadata.
+- It is closest to existing evaluation runs, regression reports, traces, and task metadata.
 
 Success signals:
 
-- Reliability scorecards identify the same risk areas reviewers care about.
-- Failure taxonomy makes regressions easier to debug.
-- Release readiness report is materially better than the current regression summary.
+- Scorecards make failures easier to triage.
+- Failure taxonomy explains regressions better than the current regression summary.
+- Release-readiness output improves review quality.
 
-Architecture cost:
+Risks:
 
-- Operational complexity: `2/10`
-- Maintenance burden: `3/10`
-- Local-first compatibility: `9/10`
-
-Likely new components:
-
-- reliability classifier
-- scorecard generator
-- release-readiness report
-
-Likely failure modes:
-
-- Becomes a dashboard over existing JSON.
+- Becomes a dashboard over local JSON.
 - Adds labels without improving root-cause analysis.
 - Overstates reliability despite no runtime agent signal.
 
-Opportunity cost:
+Assessment: useful polish, but not enough new technical depth.
 
-- Medium. It is easy to build, but it may not add much technical depth.
+### Runtime Observability
 
-Moat analysis:
+Runtime observability would add a local agent execution signal model and trace boundary so AgentOps can inspect agent runs, tool calls, model calls, workflow steps, and failures.
 
-- Why users choose AgentOps: deterministic, local-first reliability summaries tied to engineering workflows.
-- Why LangSmith could copy: it already has traces, production metrics, automations, and failure diagnosis primitives.
-- Why Braintrust could copy: it already has evals, regressions, traces, and datasets.
-- Why Phoenix/Langfuse/Datadog could copy: they already own observability/eval data and can add scorecards.
-- Defensible advantage: weak to medium. The engineering-workflow specificity is useful, but analytics alone is not hard to copy.
-
-Incremental path:
-
-- `M09`: reliability scorecard from existing evaluation artifacts.
-- `M10`: failure taxonomy and release-readiness report.
-- `M11`: drift trend across local runs.
-
-Assessment: useful, but too likely to be "another reporting layer."
-
-### Future 2: Agent Runtime Observability
-
-What it means: introduce a local agent execution signal model and trace boundary so AgentOps can observe agent runs, tool calls, model calls, workflow steps, and failures.
-
-Primary user: AI engineer debugging agent behavior.
-
-Secondary user: SRE or platform engineer.
+User: AI engineer debugging agent behavior.
 
 Buyer: AI platform or observability lead.
-
-Champion: staff platform engineer.
 
 Operator: AI platform or SRE team.
 
 Why now:
 
-- AgentOps currently evaluates workflow outputs but not real agent execution.
-- Runtime signal is the conceptual gap between "evaluation platform" and "agent reliability platform."
-- Market incumbents already offer generic tracing, so AgentOps would need a focused engineering-agent execution model.
+- AgentOps evaluates workflow outputs but not running agents.
+- Runtime execution evidence is the missing bridge from evaluation platform to agent reliability platform.
+- This direction changes the architecture category instead of adding another reporting layer.
 
 Minimal runtime signal model:
 
@@ -317,19 +305,26 @@ Minimal runtime signal model:
 | `WorkflowStep` | A deterministic step in the run, such as plan, fetch, analyze, review, summarize |
 | `ToolCall` | External or local tool invocation, including inputs, outputs, status, latency, and error |
 | `ModelCall` | Model invocation metadata when a model is used |
-| `FailureEvent` | Structured failure, timeout, policy violation, malformed output, tool error, or evaluation failure |
+| `FailureEvent` | Structured timeout, policy violation, malformed output, tool error, or evaluation failure |
 | `EvaluationResult` | Link from runtime execution to deterministic evaluation outcome |
 
 Relationship to current evaluation traces:
 
-- Current traces show evaluation task phases: fixture load, workflow execution, scoring, persistence.
-- Runtime traces would show actual agent or workflow execution inside the workflow phase.
-- Evaluation traces answer: "How did the evaluation run?"
+- Current traces answer: "How did the evaluation run?"
 - Runtime traces answer: "What did the agent do?"
+- The useful reliability signal is the correlation between those two layers.
+
+Potential moat:
+
+```text
+deterministic evaluation + runtime trace correlation
+```
+
+Generic "engineering-agent reliability analysis" is positioning, not a moat. The stronger moat would be the ability to connect runtime execution evidence to deterministic evaluation failures in a local-first, engineering-specific system.
 
 OpenTelemetry boundary:
 
-- OpenTelemetry compatibility should be an import/export boundary.
+- OpenTelemetry compatibility should remain an import/export boundary.
 - AgentOps should not become a full observability backend.
 - A future could map `AgentRun`, `ToolCall`, and `ModelCall` into OTel-like spans or accept simplified trace JSON inspired by OTel.
 
@@ -337,169 +332,92 @@ Success signals:
 
 - Can trace a complete agent execution.
 - Can correlate tool/model failures with evaluation failures.
-- Can replay or inspect a failure timeline from local artifacts.
+- Can inspect a failure timeline from local artifacts.
 - Can produce an evidence-backed explanation of why a run failed.
 
-Architecture cost:
+Risks:
 
-- Operational complexity: `5/10`
-- Maintenance burden: `6/10`
-- Local-first compatibility: `7/10`
-
-Likely new components:
-
-- runtime trace schema
-- trace collector or fixture provider
-- failure event classifier
-- runtime-to-evaluation correlation
-- trace viewer or report renderer
-
-Likely failure modes:
-
-- Drifts into a generic observability product.
-- Adds large schemas before real use cases.
+- Drifts into generic observability.
+- Adds schemas before real use cases.
 - Introduces hidden agent-framework dependency.
-- Breaks the deterministic/local-first philosophy.
+- Weakens deterministic local-first design.
 
-Opportunity cost:
+Assessment: strongest AgentOps continuation hypothesis. It should still be validated against Project #2 opportunity cost before building.
 
-- Medium to high. It is a real platform direction and would consume meaningful time.
+### Evaluation Control Plane
 
-Moat analysis:
+Evaluation control plane would add evaluation scheduling, benchmark lifecycle, baseline governance, regression approvals, and release policy management.
 
-- Why users choose AgentOps: focused reliability analysis for engineering-agent workflows, not broad LLM app tracing.
-- Why LangSmith could copy: it already has rich tracing and failure tooling, but its advantage is broad platform coverage rather than local-first deterministic engineering workflow evaluation.
-- Why Braintrust could copy: it already connects traces and evals, but AgentOps could differentiate through engineering-specific failure taxonomy and local deterministic artifacts.
-- Why Phoenix/Langfuse/Datadog could copy: they have tracing infrastructure and OTel alignment, but AgentOps could own narrow engineering-agent failure correlation.
-- Defensible advantage: medium. The moat is not tracing itself. The moat would be the combination of engineering workflow context, deterministic evaluation, and runtime failure correlation.
-
-Incremental path:
-
-- `M09`: local `AgentRun` trace model with fixture-backed sample executions.
-- `M10`: correlate runtime failures with evaluation failures.
-- `M11`: OTel-compatible export/import boundary for simplified traces.
-
-Assessment: strongest AgentOps continuation if the project continues.
-
-### Future 3: Agent Evaluation Control Plane
-
-What it means: add evaluation scheduling, benchmark lifecycle, baseline governance, regression approval, and release policy management.
-
-Primary user: AI evaluation engineer.
-
-Secondary user: release manager.
+User: AI evaluation engineer.
 
 Buyer: AI platform lead.
-
-Champion: engineering quality lead.
 
 Operator: developer productivity team.
 
 Why now:
 
 - AgentOps already has suites, baselines, regressions, and CI gates.
-- Control plane work would formalize what is currently local and CLI-oriented.
 
 Success signals:
 
-- Can manage suite versions and baseline refreshes with clear approval evidence.
-- Can schedule and compare evaluations across versions.
-- Can explain release readiness from deterministic checks.
+- Suite versions and baseline refreshes become easier to review.
+- Release readiness can be explained through deterministic checks.
 
-Architecture cost:
-
-- Operational complexity: `5/10`
-- Maintenance burden: `6/10`
-- Local-first compatibility: `6/10`
-
-Likely new components:
-
-- suite registry
-- baseline lifecycle manager
-- approval workflow
-- scheduler
-- release policy model
-
-Likely failure modes:
+Risks:
 
 - Requires persistence, auth, RBAC, and workflow ownership to become credible.
 - Competes directly with evaluation management products.
-- Adds process without improving technical depth.
+- Adds process surface more than technical depth.
 
-Opportunity cost:
+Assessment: natural extension, but strategically weaker than runtime observability.
 
-- High. It pulls AgentOps toward enterprise workflow management.
+## Project #2 Selection Criteria
 
-Moat analysis:
+If the portfolio path wins, Project #2 should be selected through the same evidence-driven lens.
 
-- Why users choose AgentOps: deterministic local evaluation governance for engineering copilots.
-- Why LangSmith could copy: it already has observability, evaluation, automations, and deployment options.
-- Why Braintrust could copy: it already has evaluation, datasets, experiments, prompts, deploy, monitoring, and admin workflows.
-- Why Phoenix/Langfuse/Datadog could copy: they already manage datasets, evals, traces, experiments, and platform workflows.
-- Defensible advantage: weak. This future is too close to existing evaluation platforms.
+| Candidate Project #2 | Distributed Systems | Event Driven | Platform Engineering | SRE / Ops | Cloud Native | Complements AgentOps | Interview Value | Feasibility | Total |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Event-Driven Reliability Platform | 5 | 5 | 5 | 5 | 4 | 5 | 5 | 4 | `38` |
+| Workflow Orchestration Engine | 4 | 4 | 5 | 4 | 4 | 4 | 5 | 3 | `33` |
+| Cloud-Native Platform Control Plane | 4 | 3 | 5 | 4 | 5 | 4 | 5 | 3 | `33` |
+| Distributed Job Processing System | 5 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | `33` |
+| Streaming Data Infrastructure | 5 | 5 | 4 | 3 | 4 | 4 | 4 | 3 | `32` |
 
-Incremental path:
+Recommended Project #2 category:
 
-- `M09`: baseline lifecycle report.
-- `M10`: suite registry and baseline refresh workflow.
-- `M11`: release-readiness approval record.
+```text
+Event-Driven Reliability Platform
+```
 
-Assessment: natural but not differentiated enough.
+Why it wins:
 
-## Strategic Decision Matrix
+- It directly fills the distributed systems and event-driven gaps.
+- It creates a strong SRE/operations story without distorting AgentOps.
+- It complements AgentOps: AgentOps is the AI evaluation/reliability-evidence project; Project #2 becomes the distributed operations project.
+- It supports concrete engineering topics: Kafka or compatible event log, idempotency, retries, DLQs, state machines, event sourcing, operational dashboards, and failure recovery.
 
-Scoring scale: `1` weak, `5` strong. Weights reflect career/portfolio value for a senior engineer using AgentOps as a portfolio system, not commercial product valuation.
+Suggested Project #2 shape:
 
-| Criteria | Weight | Freeze + Project #2 | Reliability Analytics | Runtime Observability | Evaluation Control Plane |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Technical depth | 10 | 5 | 2 | 5 | 3 |
-| Architecture depth | 10 | 5 | 2 | 5 | 4 |
-| Differentiation | 10 | 4 | 2 | 4 | 2 |
-| Portfolio value | 12 | 5 | 3 | 4 | 3 |
-| Resume value | 8 | 5 | 3 | 4 | 3 |
-| Interview value | 8 | 5 | 3 | 5 | 3 |
-| Distributed systems signal | 8 | 5 | 1 | 3 | 2 |
-| Platform engineering signal | 8 | 5 | 3 | 5 | 4 |
-| SRE / operations signal | 8 | 5 | 3 | 4 | 3 |
-| Implementation risk | 6 | 5 | 5 | 3 | 3 |
-| Operational complexity fit | 5 | 5 | 5 | 3 | 3 |
-| Maintenance burden fit | 5 | 5 | 4 | 3 | 2 |
-| Local-first compatibility | 5 | 5 | 5 | 4 | 3 |
-| Strategic moat | 5 | 4 | 2 | 4 | 2 |
-| Urgency / why now | 5 | 5 | 3 | 4 | 2 |
-| Opportunity cost | 5 | 5 | 2 | 3 | 2 |
-
-Weighted result:
-
-| Future | Weighted Score |
-| --- | ---: |
-| Freeze + Project #2 | `488` |
-| Runtime Observability | `407` |
-| Reliability Analytics | `288` |
-| Evaluation Control Plane | `291` |
-
-Interpretation:
-
-- Freeze + Project #2 wins because it maximizes missing career signals while preserving AgentOps as a coherent v1 artifact.
-- Runtime Observability is the best continuation path, but its opportunity cost is meaningful.
-- Reliability Analytics and Evaluation Control Plane are useful but less differentiated.
+- `P01`: event ingestion with durable queue, idempotency keys, retries, and DLQ.
+- `P02`: state-machine workflow execution with replay and compensation.
+- `P03`: operational dashboard with failure analysis, lag metrics, and runbook hooks.
 
 ## Engineering Signal Matrix
 
 | Capability | Distributed Systems | Event Driven | Platform Engineering | SRE | Observability | Staff Signal |
 | --- | --- | --- | --- | --- | --- | --- |
-| Freeze + Project #2 | High if Project #2 is chosen well | High if event-driven | High | High | Medium to High | High |
-| Reliability Analytics | Low | Low | Medium | Medium | Low | Medium |
-| Runtime Observability | Medium | Medium | High | High | High | High |
-| Evaluation Control Plane | Medium | Medium | High | Medium | Medium | Medium |
+| Project #2 Event-Driven Reliability Platform | High | High | High | High | Medium | High |
+| AgentOps Runtime Observability | Medium | Medium | High | High | High | High |
+| AgentOps Reliability Analytics | Low | Low | Medium | Medium | Low | Medium |
+| AgentOps Evaluation Control Plane | Medium | Medium | High | Medium | Medium | Medium |
+| Complete AgentOps Freeze | None new | None new | None new | None new | None new | Preserves existing story |
 
 ## Moat Analysis
 
-Strongest possible AgentOps moat:
+Strongest possible AgentOps product moat:
 
 ```text
-Deterministic engineering-agent reliability analysis:
-runtime execution evidence + engineering workflow context + evaluation failure correlation.
+deterministic evaluation + runtime trace correlation
 ```
 
 This is stronger than:
@@ -513,12 +431,12 @@ generic release governance
 
 Why:
 
-- Generic tracing is already well-covered by LangSmith, Phoenix, Langfuse, Datadog, and related platforms.
-- Generic evaluation is already well-covered by Braintrust, Phoenix, Langfuse, and evaluation frameworks.
-- Generic release governance is already adjacent to Harness and LaunchDarkly.
-- Engineering-agent reliability can be narrower: it can connect repository context, PR impact, incident evidence, runtime execution, and deterministic evaluation.
+- Generic tracing is already well covered by LangSmith, Phoenix, Langfuse, Datadog, and related platforms.
+- Generic evaluation is already well covered by Braintrust, Phoenix, Langfuse, and evaluation frameworks.
+- Generic release governance is adjacent to Harness and LaunchDarkly.
+- Engineering-agent reliability only becomes meaningfully differentiated when runtime execution evidence can be correlated with deterministic evaluation outcomes.
 
-But that moat does not exist yet. It requires runtime execution signals. Without those signals, AgentOps should not claim to be a full Agent Reliability Platform.
+But that moat does not exist in AgentOps v1. AgentOps should not claim to be a full Agent Reliability Platform until runtime execution evidence exists.
 
 ## Strategic Rejections
 
@@ -536,38 +454,30 @@ AgentOps should not become:
 - production incident-management platform
 - feature flag or release-control platform
 
-These directions either duplicate stronger incumbents, require heavy operational surface area, or dilute AgentOps' current strength: deterministic engineering workflow evaluation.
+These directions duplicate stronger incumbents, require heavy operational surface area, or dilute AgentOps' current strength: deterministic engineering workflow evaluation.
 
 ## Final Recommendation
 
-Primary recommendation:
+Primary portfolio recommendation:
 
 ```text
 Freeze AgentOps at v1.0.0 as a completed portfolio project.
-Start Project #2 in distributed event-driven reliability infrastructure.
+Build Project #2 as an Event-Driven Reliability Platform.
 ```
 
-Recommended second-project category:
+Why:
+
+- AgentOps already tells the AI evaluation and reliability-evidence story.
+- The highest-value missing portfolio skills are distributed systems, event-driven architecture, cloud-native operations, SRE, and data infrastructure.
+- A second project demonstrates those skills more cleanly than stretching AgentOps into a different product.
+
+AgentOps product recommendation:
 
 ```text
-Event-driven workflow and reliability platform.
+If AgentOps ever receives one more milestone, validate M09 Agent Execution Trace Model first.
 ```
 
-Why this is the best next move:
-
-- AgentOps already tells the AI evaluation and reliability evidence story.
-- The highest-value missing skills are distributed systems, event-driven architecture, cloud-native operations, SRE, and data infrastructure.
-- A second project can demonstrate those skills more cleanly than stretching AgentOps into a different product.
-
-Conditional AgentOps continuation:
-
-If AgentOps must continue, choose:
-
-```text
-M09 Agent Execution Trace Model
-```
-
-Minimum scope:
+Minimum M09 hypothesis:
 
 - define `AgentRun`, `WorkflowStep`, `ToolCall`, `ModelCall`, `FailureEvent`, and `EvaluationResult`
 - add fixture-backed local traces for one engineering-agent workflow
@@ -575,13 +485,16 @@ Minimum scope:
 - keep everything local, deterministic, and file-backed
 - avoid hosted observability, auth, database persistence, agent-framework dependency, and generic tracing sprawl
 
-Do not choose reliability scorecards as the next major bet unless they are backed by runtime execution evidence. Scorecards without runtime signals would be useful polish, but not a Principal Engineer-level evolution.
+Decision guard:
+
+- If M09 cannot prove that runtime execution evidence materially improves AgentOps' technical depth, freeze after v1.
+- Do not build scorecards, governance workflows, or control-plane features before runtime evidence exists.
 
 ## What To Do Next
 
 1. Keep AgentOps stable as `v1.0.0`.
-2. Use AgentOps in interviews as the AI evaluation and reliability evidence project.
-3. Build Project #2 to demonstrate distributed systems and event-driven operations.
-4. If returning to AgentOps later, start with runtime trace modeling, not reporting.
+2. Use AgentOps in interviews as the AI evaluation and reliability-evidence project.
+3. Plan Project #2 as an event-driven reliability platform.
+4. Return to AgentOps only if the M09 runtime trace model remains compelling after Project #2 planning.
 
-This preserves AgentOps' identity while avoiding the most common portfolio failure mode: turning a finished, coherent project into an overextended platform.
+This preserves AgentOps' identity while avoiding the common portfolio failure mode: turning a finished, coherent project into an overextended platform.
